@@ -32,6 +32,12 @@ This repository will be used as base to start a new terraform project or even us
 - Create a new App Registration with a valid secret
 - Grant owner permission to the App Registrato into the managment group were the subscriptions will be located
 - Login in the App Registration in your device ``
+- Create a new .tfvars file and provide at least the following items:
+```terraform
+management_group           = "<management-group-ip>"
+environment_name           = "con"
+management_subscription_id = "<subscription-id>"
+```
 - Grant permissions of the [terraform-backend.sh](./scripts/terraform-backend.sh) with `chmod +x ./terraform-backend.sh `
 - Run the bash command [terraform-backend.sh](./scripts/terraform-backend.sh)
 - 
