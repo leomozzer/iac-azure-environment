@@ -5,6 +5,10 @@
 *.tfstate
 *.tfstate.*
 
+#Provider and backend
+terraform-live/provider.tf
+terraform-live/backend.tf
+
 # Crash log files
 crash.log
 crash.*.log
@@ -15,6 +19,11 @@ crash.*.log
 # to change depending on the environment.
 *.tfvars
 *.tfvars.json
+
+#Exclude plan files
+*.tfplan
+*.tfplan.*
+*.*plan
 
 # Ignore override files as they are usually used to override resources locally and so
 # are not checked in

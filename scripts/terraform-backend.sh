@@ -31,6 +31,22 @@ EOL
 
 echo "backend.tf file has been created with the specified configuration."
 
+cat <<EOL > provider.tf
+provider "azurerm" {
+  features {
+
+  }
+}
+
+provider "azurerm" {
+  features {
+
+  }
+  alias           = "management"
+  subscription_id = var.management_subscription_id
+}
+EOL
+
 #Copy provider and backend file create locally to tffiles container
 az storage blob upload \
     --container-name prod-tf-files \
