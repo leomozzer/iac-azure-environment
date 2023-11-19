@@ -1,7 +1,8 @@
 #!/bin/bash
 
-varFile=prod.tfvars
-outputFile=prod.plan
+environment=prod
+varFile=$environment.tfvars
+outputFile=$environment.plan
 STORAGE_ACCOUNT_NAME="staciacazure"
 
 # Change to the Terraform directory
@@ -24,11 +25,17 @@ terraform init -reconfigure
 
 #Run terraform formating
 terraform fmt
+
 # Run Terraform plan and save the output to a plan file
 terraform plan -var-file=$varFile -out=$outputFile
+echo "Terraform plan completed"
+
+az storage blob upload \
+    --container-name $environment-tf-files \
+    --file $outputFile \
+    --name $outputFile \
+    --account-name $STORAGE_ACCOUNT_NAME \
+    --overwrite
 
 # Optionally, you can print the plan to the console
 # terraform show -json tfplan | jq '.'
-
-# Provide feedback to the user
-echo "Terraform plan completed. The plan file is saved as tfplan in the ./terraform-live directory."
