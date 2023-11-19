@@ -36,7 +36,7 @@
                 },
                 "defaultValue": "AzPolicyDiagnosticSetting"
             },
-            "logAnalytics": {
+            "logAnalyticsId": {
                 "type": "String",
                 "metadata": {
                     "displayName": "Log Analytics workspace",
@@ -116,7 +116,7 @@
                                     "location": {
                                         "type": "string"
                                     },
-                                    "logAnalytics": {
+                                    "logAnalyticsId": {
                                         "type": "string"
                                     },
                                     "resourceGroup": {
@@ -132,7 +132,6 @@
                                         "type": "bool"
                                     }
                                 },
-                                "variables": {},
                                 "resources": [
                                     {
                                         "type": "Microsoft.KeyVault/vaults/providers/diagnosticSettings",
@@ -141,7 +140,7 @@
                                         "location": "[parameters('location')]",
                                         "dependsOn": [],
                                         "properties": {
-                                            "workspaceId": "[resourceId('microsoft.operationalinsights/workspaces', parameters('logAnalytics'))]",
+                                            "workspaceId": "[parameters('logAnalyticsId')]",
                                             "metrics": [
                                                 {
                                                     "category": "AllMetrics",
@@ -186,8 +185,8 @@
                                 "resourceName": {
                                     "value": "[field('fullName')]"
                                 },
-                                "logAnalytics": {
-                                    "value": "[parameters('logAnalytics')]"
+                                "logAnalyticsId": {
+                                    "value": "[parameters('logAnalyticsId')]"
                                 },
                                 "resourceGroup": {
                                     "value": "[parameters('resourceGroup')]"

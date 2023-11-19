@@ -53,21 +53,21 @@ locals {
   ])
 }
 
-locals {
-  initiative_list = flatten([
-    for index, initiative in var.initiative_definitions : {
-      "initiative" : {
-        "definitions" : [for definition in var.policy_definitions : module.subscription_definition[definition.name].definition if contains(initiative.definitions, definition.name) == true]
-        "initiative_name" : initiative.initiative_name
-        "initiative_display_name" : initiative.initiative_display_name
-        "initiative_category" : initiative.initiative_category
-        "initiative_description" : initiative.initiative_description
-        "assignment_effect" : initiative.assignment_effect
-        "skip_role_assignment"   = initiative.skip_role_assignment
-        "skip_remediation"       = initiative.skip_remediation
-        "re_evaluate_compliance" = initiative.re_evaluate_compliance
-        "module_index"           = index
-      }
-    }
-  ])
-}
+# locals {
+#   initiative_list = flatten([
+#     for index, initiative in var.initiative_definitions : {
+#       "initiative" : {
+#         "definitions" : [for definition in var.policy_definitions : module.subscription_definition[definition.name].definition if contains(initiative.definitions, definition.name) == true]
+#         "initiative_name" : initiative.initiative_name
+#         "initiative_display_name" : initiative.initiative_display_name
+#         "initiative_category" : initiative.initiative_category
+#         "initiative_description" : initiative.initiative_description
+#         "assignment_effect" : initiative.assignment_effect
+#         "skip_role_assignment"   = initiative.skip_role_assignment
+#         "skip_remediation"       = initiative.skip_remediation
+#         "re_evaluate_compliance" = initiative.re_evaluate_compliance
+#         "module_index"           = index
+#       }
+#     }
+#   ])
+# }
