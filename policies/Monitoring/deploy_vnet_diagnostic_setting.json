@@ -1,12 +1,11 @@
 {
+    "type": "Microsoft.Authorization/policyDefinitions",
+    "name": "deploy_vnet_diagnostic_setting",
     "properties": {
-        "displayName": "Diagnostic settings to Key Vaults",
-        "policyType": "Custom",
-        "mode": "Indexed",
-        "description": "Deploys the diagnostic settings for all key vaults to stream resource logs to a Log Analytics workspace when any resource which is missing this diagnostic settings is created or updated.",
+        "displayName": "Deploy Diagnostic Settings for Virtual Networks to a Log Analytics workspace",
+        "description": "Deploys the diagnostic settings for Virtual Networks to stream to a regional Log Analytics workspace when any Virtual Network which is missing this diagnostic settings is created or updated.",
         "metadata": {
-            "category": "Monitoring",
-            "version": "1.0.0"
+            "category": "Monitoring"
         },
         "parameters": {
             "environment": {
@@ -81,13 +80,16 @@
         "policyRule": {
             "if": {
                 "field": "type",
-                "equals": "Microsoft.KeyVault/vaults"
+                "equals": "Microsoft.Network/virtualNetworks"
             },
             "then": {
                 "effect": "[parameters('effect')]",
                 "details": {
                     "type": "Microsoft.Insights/diagnosticSettings",
                     "name": "[parameters('profileName')]",
+                    "roleDefinitionIds": [
+                        "/providers/Microsoft.Authorization/roleDefinitions/92aaf0da-9dab-42b6-94a3-d43ce8d16293"
+                    ],
                     "existenceCondition": {
                         "allOf": [
                             {
@@ -100,10 +102,6 @@
                             }
                         ]
                     },
-                    "roleDefinitionIds": [
-                        "/providers/microsoft.authorization/roleDefinitions/749f88d5-cbae-40b8-bcfc-e573ddc772fa",
-                        "/providers/microsoft.authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
-                    ],
                     "deployment": {
                         "properties": {
                             "mode": "incremental",
@@ -136,9 +134,10 @@
                                         "type": "bool"
                                     }
                                 },
+                                "variables": {},
                                 "resources": [
                                     {
-                                        "type": "Microsoft.KeyVault/vaults/providers/diagnosticSettings",
+                                        "type": "Microsoft.Network/virtualNetworks/providers/diagnosticSettings",
                                         "apiVersion": "2017-05-01-preview",
                                         "name": "[concat(parameters('resourceName'), '/', 'Microsoft.Insights/', parameters('profileName'))]",
                                         "location": "[parameters('location')]",
@@ -148,36 +147,20 @@
                                             "metrics": [
                                                 {
                                                     "category": "AllMetrics",
-                                                    "enabled": "[parameters('metricsEnabled')]"
+                                                    "enabled": "[parameters('metricsEnabled')]",
+                                                    "timeGrain": null
                                                 }
                                             ],
                                             "logs": [
                                                 {
-                                                    "category": "AuditEvent",
-                                                    "enabled": "[parameters('logsEnabled')]"
-                                                },
-                                                {
-                                                    "category": "AzurePolicyEvaluationDetails",
+                                                    "category": "VMProtectionAlerts",
                                                     "enabled": "[parameters('logsEnabled')]"
                                                 }
                                             ]
                                         }
                                     }
                                 ],
-                                "outputs": {
-                                    "resourceName": {
-                                        "type": "string",
-                                        "value": "[parameters('resourceName')]"
-                                    },
-                                    "condition": {
-                                        "type": "bool",
-                                        "value": "[not(empty(resourceId('Microsoft.KeyVault/vaults', parameters('resourceName'))))]"
-                                    },
-                                    "resourceID": {
-                                        "type": "string",
-                                        "value": "[resourceId('Microsoft.Storage/storageAccounts', parameters('resourceName'))]"
-                                    }
-                                }
+                                "outputs": {}
                             },
                             "parameters": {
                                 "environment": {
