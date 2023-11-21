@@ -57,7 +57,7 @@ locals {
 #   initiative_list = flatten([
 #     for index, initiative in var.initiative_definitions : {
 #       "initiative" : {
-#         "definitions" : [for definition in var.policy_definitions : module.subscription_definition[definition.name].definition if contains(initiative.definitions, definition.name) == true]
+#         "definitions" : [for definition in var.policy_definitions : module.bulk_definition[definition.name].definition if contains(initiative.definitions, definition.name) == true]
 #         "initiative_name" : initiative.initiative_name
 #         "initiative_display_name" : initiative.initiative_display_name
 #         "initiative_category" : initiative.initiative_category
@@ -71,3 +71,36 @@ locals {
 #     }
 #   ])
 # }
+
+locals {
+  vnet_spoke = flatten([
+    for value, key in var.vnet_definitions : [
+      for spoke_name, spoke_definition in lookup(key, "vnet_spoke_definitions", {}) : {
+        subscription_id           = "${key["subscription_source_id"]}"
+        location                  = "${key["location"]}"
+        location_short            = "${local.region_name_standardize[key["location"]]}"
+        spoke_name                = "${spoke_name}"
+        spoke_resource_group_name = "rg-vnet-${local.region_name_standardize[key["location"]]}-spoke-${spoke_name}"
+        spoke_vnet_name           = "vnet-${local.region_name_standardize[key["location"]]}-spoke-${spoke_name}"
+        default_subnet_name       = "vnet-${spoke_name}"
+        hubs                      = spoke_definition["hubs"]
+        peerings                  = spoke_definition["peerings"]
+        azapi_vnet_body = jsonencode({
+          properties = merge(
+            {
+              addressSpace = {
+                addressPrefixes = "${spoke_definition["address_space"]}"
+              }
+            }
+          )
+        })
+        azapi_subnet_body = jsonencode({
+          properties = {
+            addressPrefix = spoke_definition["default_subnet_address_prefix"]
+          }
+        })
+        # subnets = spoke_definition["subnets"]
+      }
+    ]
+  ])
+}
