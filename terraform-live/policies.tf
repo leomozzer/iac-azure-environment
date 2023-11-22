@@ -79,3 +79,21 @@ module "diagnostics_initiative" {
 }
 
 ###########################################
+#           Configure Tags                #
+###########################################
+module "definition_resource_group_tags" {
+  source              = "gettek/policy-as-code/azurerm//modules/definition"
+  version             = "2.8.0"
+  policy_name         = "require_resource_group_tags"
+  display_name        = "Resource groups must have tags"
+  policy_category     = "Tags"
+  management_group_id = data.azurerm_management_group.management_group.id
+}
+
+module "assignment_resource_group_tags" {
+  source            = "gettek/policy-as-code/azurerm//modules/def_assignment"
+  version           = "2.8.0"
+  definition        = module.definition_resource_group_tags.definition
+  assignment_scope  = data.azurerm_management_group.management_group.id
+  assignment_effect = "Audit"
+}
