@@ -17,6 +17,30 @@ variable "environment_name" {
   description = "Name of the customer short, must have 3 letters at maximum"
 }
 
+variable "management_monitoring_email" {
+  type    = string
+  default = "Email that will receive notifications regarding monitoring"
+}
+
+variable "default_vnet_hub_definition" {
+  type = object({
+    subscription_id = string
+    hubs = optional(list(object({
+      address_space = list(string)
+      location      = string
+    })), [])
+  })
+  default = {
+    "subscription_id" = "",
+    "hubs" = [
+      {
+        "address_space" = [],
+        "location"      = "",
+      }
+    ]
+  }
+}
+
 variable "vnet_definitions" {
   type = any
 }
