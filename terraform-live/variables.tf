@@ -27,7 +27,11 @@ variable "default_vnet_hub_definition" {
     subscription_id = string
     hubs = optional(list(object({
       address_space = list(string)
-      location      = string
+      location      = string,
+      subnets = optional(list(object({
+        name           = string
+        address_prefix = string
+      })))
     })), [])
   })
   default = {
@@ -36,20 +40,31 @@ variable "default_vnet_hub_definition" {
       {
         "address_space" = [],
         "location"      = "",
+        "subnets"       = []
       }
     ]
   }
 }
 
-variable "vnet_definitions" {
-  type = any
-}
-
-variable "policy_definitions" {
-  type = any
-}
-
-variable "initiative_definitions" {
-  type    = any
-  default = []
+variable "default_vnet_spoke_definition" {
+  type = list(object({
+    subscription_id = string
+    identifier      = optional(string)
+    spokes = optional(list(object({
+      location      = string
+      address_space = list(string)
+      subnets = optional(list(object({
+        address_prefix = string
+      })))
+    })))
+  }))
+  default = [{
+    subscription_id = "",
+    identifier      = "",
+    spokes = [{
+      location      = "",
+      address_space = [],
+      subnets       = []
+    }]
+  }]
 }
