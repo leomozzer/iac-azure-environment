@@ -22,9 +22,6 @@ locals {
     # Add more mappings as needed
   }
 
-  default_hub_quantity   = [1]
-  default_spoke_quantity = [1]
-
   sample_hub_address_spaces = [
     {
       address_space = ["10.0.0.0/20"]
