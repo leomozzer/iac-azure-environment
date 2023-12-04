@@ -5,20 +5,32 @@
 ##########################
 locals {
   region_name_standardize = {
-    "East US"          = "eus",
-    "eastus"           = "eus"
-    "east us"          = "eus"
-    "West US"          = "wus",
-    "North Central US" = "ncus",
-    "South Central US" = "scus",
-    "East US 2"        = "eastus2",
-    "West US 2"        = "westus2",
-    "Central US"       = "cus",
-    "West Central US"  = "wcus",
-    "Canada East"      = "canadaeast",
-    "Canada Central"   = "canadacentral",
-    "West Europe"      = "euw"
-    "westeurope"       = "euw"
+    "East US"           = "eus"
+    "eastus"            = "eus"
+    "east us"           = "eus"
+    "West US"           = "wus"
+    "North Central US"  = "ncus"
+    "South Central US"  = "scus"
+    "East US 2"         = "eastus2"
+    "West US 2"         = "westus2"
+    "Central US"        = "cus"
+    "West Central US"   = "wcus"
+    "Canada East"       = "canadaeast"
+    "Canada Central"    = "canadacentral"
+    "West Europe"       = "weu"
+    "westeurope"        = "weu"
+    "North Europe"      = "neu"
+    "northeurope"       = "neu"
+    "UK South"          = "uks"
+    "UK West"           = "ukw"
+    "France Central"    = "francecentral"
+    "France South"      = "francesouth"
+    "Germany North"     = "germanynorth"
+    "Germany West"      = "germanywest"
+    "Switzerland North" = "chnorth"
+    "Switzerland West"  = "chwest"
+    "Norway East"       = "noeast"
+    "Norway West"       = "nowest"
     # Add more mappings as needed
   }
 
@@ -62,9 +74,11 @@ locals {
     }
   ]
 }
+
 ##########################
 #  Resource naming local #
 ##########################
+
 locals {
   rg_general_name        = "rg-${var.environment_name}-${local.region_name_standardize[var.principal_location]}-general"
   kv_general_name        = "kv-${var.environment_name}-${local.region_name_standardize[var.principal_location]}-general"
@@ -116,7 +130,6 @@ locals {
 #    Vnet Spoke Local    #
 ##########################
 
-
 locals {
   default_vnet_spokes = length(var.default_vnet_spoke_definition[0]["spokes"]) > 0 ? flatten([
     for value, key in var.default_vnet_spoke_definition : [
@@ -158,6 +171,7 @@ locals {
 ##########################
 #    Monitoring Local    #
 ##########################
+
 locals {
   filtered_storaged_accounts = [for res, config in data.azurerm_resources.storage_accounts.resources : {
     name                = config.name

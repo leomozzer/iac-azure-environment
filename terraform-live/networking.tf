@@ -1,5 +1,5 @@
 ##########################
-#   Configure Hub Vnets  #
+#  Configure Hub Vnets   #
 ##########################
 
 module "default_hubs" {
@@ -30,4 +30,17 @@ module "default_spokes" {
   vnet_name           = each.value.spoke_vnet_name
   vnet_address_prefix = each.value.address_prefix
   subnets             = each.value.subnets
+}
+
+##################################
+# Configure Peering hub <> Spoke #
+##################################
+
+module "peering_hub_spoke" {
+  source          = "../terraform-modules/azapi/peering-hub-spoke"
+  count           = length(local.default_vnet_spokes)
+  vnet_hub_name   = module.default_hubs[0].vnet.name
+  vnet_hub_id     = module.default_hubs[0].vnet.id
+  vnet_spoke_name = module.default_spokes[count.index].vnet.name
+  vnet_spoke_id   = module.default_spokes[count.index].vnet.id
 }
