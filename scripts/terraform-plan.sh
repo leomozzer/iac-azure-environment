@@ -8,17 +8,17 @@ STORAGE_ACCOUNT_NAME="staciacazure"
 # Change to the Terraform directory
 cd ./terraform-live
 
- az storage blob download \
-          --file provider.tf \
-          --name provider.tf \
-          --account-name $STORAGE_ACCOUNT_NAME \
-          --container-name prod-tf-files
+# az storage blob download \
+#     --file provider.tf \
+#     --name provider.tf \
+#     --account-name $STORAGE_ACCOUNT_NAME \
+#     --container-name prod-tf-files
 
- az storage blob download \
-          --file backend.tf \
-          --name backend.tf \
-          --account-name $STORAGE_ACCOUNT_NAME \
-          --container-name prod-tf-files
+# az storage blob download \
+#     --file backend.tf \
+#     --name backend.tf \
+#     --account-name $STORAGE_ACCOUNT_NAME \
+#     --container-name prod-tf-files
 
 # Initialize Terraform (if not already initialized)
 terraform init -reconfigure

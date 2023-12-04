@@ -1,0 +1,72 @@
+{
+    "properties": {
+        "displayName": "Inherit tags from the resource group",
+        "policyType": "Custom",
+        "mode": "Indexed",
+        "description": "Adds or replaces the 'Environment' and 'UseCase' in the resource level",
+        "metadata": {
+            "version": "1.0.0",
+            "category": "Tags"
+        },
+        "parameters": {
+            "environmentTag": {
+                "type": "String",
+                "defaultValue": "Environment"
+            },
+            "useCaseTag": {
+                "type": "String",
+                "defaultValue": "UseCase"
+            }
+        },
+        "policyRule": {
+            "if": {
+                "anyOf": [
+                    {
+                        "allOf": [
+                            {
+                                "field": "[concat('tags[', parameters('environmentTag'), ']')]",
+                                "notEquals": "[resourceGroup().tags[parameters('environmentTag')]]"
+                            },
+                            {
+                                "value": "[resourceGroup().tags[parameters('environmentTag')]]",
+                                "notEquals": ""
+                            }
+                        ]
+                    },
+                    {
+                        "allOf": [
+                            {
+                                "field": "[concat('tags[', parameters('useCaseTag'), ']')]",
+                                "notEquals": "[resourceGroup().tags[parameters('useCaseTag')]]"
+                            },
+                            {
+                                "value": "[resourceGroup().tags[parameters('useCaseTag')]]",
+                                "notEquals": ""
+                            }
+                        ]
+                    }
+                ]
+            },
+            "then": {
+                "effect": "modify",
+                "details": {
+                    "roleDefinitionIds": [
+                        "/providers/microsoft.authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+                    ],
+                    "operations": [
+                        {
+                            "operation": "addOrReplace",
+                            "field": "[concat('tags[', parameters('environmentTag'), ']')]",
+                            "value": "[resourceGroup().tags[parameters('environmentTag')]]"
+                        },
+                        {
+                            "operation": "addOrReplace",
+                            "field": "[concat('tags[', parameters('useCaseTag'), ']')]",
+                            "value": "[resourceGroup().tags[parameters('useCaseTag')]]"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

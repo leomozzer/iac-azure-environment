@@ -12,6 +12,8 @@ cd ./terraform-live
           --account-name $STORAGE_ACCOUNT_NAME \
           --container-name $environment-tf-files
 
+#https://stackoverflow.com/questions/70049758/terraform-for-each-one-by-one
+TF_CLI_ARGS_apply="-parallelism=1"
 # Run Terraform apply using the saved plan file
 terraform apply $planFile
 
