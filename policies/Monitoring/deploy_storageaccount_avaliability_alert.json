@@ -258,7 +258,6 @@
                                             "severity": "[parameters('severity')]",
                                             "windowSize": "[parameters('windowSize')]"
                                         },
-                                        "resourceGroup": "[parameters('resourceGroup')]",
                                         "type": "Microsoft.Insights/metricAlerts"
                                     }
                                 ]
