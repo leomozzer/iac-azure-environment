@@ -97,3 +97,27 @@ module "assignment_resource_group_tags" {
   assignment_scope  = data.azurerm_management_group.management_group.id
   assignment_effect = "Audit"
 }
+
+####################################
+# Configure Storage Account Alerts #
+####################################
+module "storage_account_avaliability_alert" {
+  source              = "gettek/policy-as-code/azurerm//modules/definition"
+  version             = "2.8.0"
+  policy_name         = "deploy_storageaccount_avaliability_alert"
+  display_name        = "Deploy Storage Account Avaliability Alert"
+  policy_category     = "Monitoring"
+  management_group_id = data.azurerm_management_group.management_group.id
+}
+
+module "storage_account_avaliability_alert_assignment" {
+  source            = "gettek/policy-as-code/azurerm//modules/def_assignment"
+  version           = "2.8.0"
+  definition        = module.storage_account_avaliability_alert.definition
+  assignment_scope  = data.azurerm_management_group.management_group.id
+  assignment_effect = "DeployIfNotExists"
+
+  assignment_parameters = {
+    actionGroupID = azurerm_monitor_action_group.azurerm_monitor_action_group.id
+  }
+}

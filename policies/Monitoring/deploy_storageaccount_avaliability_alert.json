@@ -1,0 +1,294 @@
+{
+    "properties": {
+        "displayName": "Deploy Storage Account Avaliability Alert",
+        "policyType": "Custom",
+        "mode": "Indexed",
+        "description": "Deploys automatically the alert of storage account avaliability",
+        "metadata": {},
+        "parameters": {
+            "actionGroupID": {
+                "type": "String",
+                "metadata": {
+                    "description": "Action group id",
+                    "displayName": "Action Group ID"
+                },
+                "defaultValue": ""
+            },
+            "autoMitigate": {
+                "type": "String",
+                "metadata": {
+                    "description": "Auto Mitigate for the alert",
+                    "displayName": "Auto Mitigate"
+                },
+                "allowedValues": [
+                    "true",
+                    "false"
+                ],
+                "defaultValue": "true"
+            },
+            "effect": {
+                "type": "String",
+                "metadata": {
+                    "description": "Enable or disable the execution of the policy",
+                    "displayName": "Effect"
+                },
+                "allowedValues": [
+                    "DeployIfNotExists"
+                ],
+                "defaultValue": "DeployIfNotExists"
+            },
+            "enabled": {
+                "type": "String",
+                "metadata": {
+                    "description": "Alert state for the alert",
+                    "displayName": "Alert State"
+                },
+                "allowedValues": [
+                    "true",
+                    "false"
+                ],
+                "defaultValue": "true"
+            },
+            "evaluationFrequency": {
+                "type": "String",
+                "metadata": {
+                    "description": "Evaluation frequency for the alert",
+                    "displayName": "Evaluation Frequency"
+                },
+                "allowedValues": [
+                    "PT1M",
+                    "PT5M",
+                    "PT15M",
+                    "PT30M",
+                    "PT1H"
+                ],
+                "defaultValue": "PT5M"
+            },
+            "resourceGroup": {
+                "type": "String",
+                "metadata": {
+                    "description": "Id of the resource group where the alerts will be deployed",
+                    "displayName": "Resource Group Id"
+                },
+                "defaultValue": ""
+            },
+            "severity": {
+                "type": "String",
+                "metadata": {
+                    "description": "Severity of the Alert",
+                    "displayName": "Severity"
+                },
+                "allowedValues": [
+                    "0",
+                    "1",
+                    "2",
+                    "3",
+                    "4"
+                ],
+                "defaultValue": "2"
+            },
+            "threshold": {
+                "type": "String",
+                "metadata": {
+                    "description": "Threshold for the alert",
+                    "displayName": "Threshold"
+                },
+                "defaultValue": "90"
+            },
+            "windowSize": {
+                "type": "String",
+                "metadata": {
+                    "description": "Window size for the alert",
+                    "displayName": "Window Size"
+                },
+                "allowedValues": [
+                    "PT1M",
+                    "PT5M",
+                    "PT15M",
+                    "PT30M",
+                    "PT1H",
+                    "PT6H",
+                    "PT12H",
+                    "P1D"
+                ],
+                "defaultValue": "PT5M"
+            }
+        },
+        "policyRule": {
+            "if": {
+                "equals": "Microsoft.Storage/storageAccounts",
+                "field": "type"
+            },
+            "then": {
+                "details": {
+                    "deployment": {
+                        "properties": {
+                            "mode": "incremental",
+                            "parameters": {
+                                "actionGroupID": {
+                                    "value": "[parameters('actionGroupID')]"
+                                },
+                                "autoMitigate": {
+                                    "value": "[parameters('autoMitigate')]"
+                                },
+                                "effect": {
+                                    "value": "[parameters('effect')]"
+                                },
+                                "enabled": {
+                                    "value": "[parameters('enabled')]"
+                                },
+                                "evaluationFrequency": {
+                                    "value": "[parameters('evaluationFrequency')]"
+                                },
+                                "resourceGroup": {
+                                    "value": "[parameters('resourceGroup')]"
+                                },
+                                "resourceId": {
+                                    "value": "[field('id')]"
+                                },
+                                "resourceName": {
+                                    "value": "[field('name')]"
+                                },
+                                "severity": {
+                                    "value": "[parameters('severity')]"
+                                },
+                                "threshold": {
+                                    "value": "[parameters('threshold')]"
+                                },
+                                "windowSize": {
+                                    "value": "[parameters('windowSize')]"
+                                }
+                            },
+                            "template": {
+                                "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                                "contentVersion": "1.0.0.0",
+                                "parameters": {
+                                    "actionGroupID": {
+                                        "type": "string"
+                                    },
+                                    "autoMitigate": {
+                                        "type": "string"
+                                    },
+                                    "effect": {
+                                        "type": "string"
+                                    },
+                                    "enabled": {
+                                        "type": "string"
+                                    },
+                                    "evaluationFrequency": {
+                                        "type": "String"
+                                    },
+                                    "resourceGroup": {
+                                        "type": "string"
+                                    },
+                                    "resourceId": {
+                                        "metadata": {
+                                            "description": "Resource ID of the resource emitting the metric that will be used for the comparison",
+                                            "displayName": "resourceId"
+                                        },
+                                        "type": "String"
+                                    },
+                                    "resourceName": {
+                                        "type": "string"
+                                    },
+                                    "severity": {
+                                        "type": "string"
+                                    },
+                                    "threshold": {
+                                        "type": "string"
+                                    },
+                                    "windowSize": {
+                                        "type": "string"
+                                    }
+                                },
+                                "resources": [
+                                    {
+                                        "apiVersion": "2017-09-01-preview",
+                                        "dependsOn": [],
+                                        "location": "global",
+                                        "name": "[concat('Storage Account Avaliability - ', parameters('resourceName'))]",
+                                        "properties": {
+                                            "actions": [
+                                                {
+                                                    "actionGroupId": "[parameters('actionGroupID')]",
+                                                    "webHookProperties": {}
+                                                }
+                                            ],
+                                            "autoMitigate": "[parameters('autoMitigate')]",
+                                            "criteria": {
+                                                "allOf": [
+                                                    {
+                                                        "criterionType": "StaticThresholdCriterion",
+                                                        "metricName": "Availability",
+                                                        "metricNamespace": "Microsoft.Storage/storageaccounts",
+                                                        "name": "Average_AvailableMBytes",
+                                                        "operator": "LessThan",
+                                                        "threshold": "[parameters('threshold')]",
+                                                        "timeAggregation": "Average"
+                                                    }
+                                                ],
+                                                "odata.type": "Microsoft.Azure.Monitor.MultipleResourceMultipleMetricCriteria"
+                                            },
+                                            "description": "",
+                                            "enabled": "[parameters('enabled')]",
+                                            "evaluationFrequency": "[parameters('evaluationFrequency')]",
+                                            "parameters": {
+                                                "autoMitigate": {
+                                                    "value": "[parameters('autoMitigate')]"
+                                                },
+                                                "enabled": {
+                                                    "value": "[parameters('enabled')]"
+                                                },
+                                                "evaluationFrequency": {
+                                                    "value": "[parameters('evaluationFrequency')]"
+                                                },
+                                                "severity": {
+                                                    "value": "[parameters('severity')]"
+                                                },
+                                                "threshold": {
+                                                    "value": "[parameters('threshold')]"
+                                                },
+                                                "windowSize": {
+                                                    "value": "[parameters('windowSize')]"
+                                                }
+                                            },
+                                            "scopes": [
+                                                "[parameters('resourceId')]"
+                                            ],
+                                            "severity": "[parameters('severity')]",
+                                            "windowSize": "[parameters('windowSize')]"
+                                        },
+                                        "resourceGroup": "[parameters('resourceGroup')]",
+                                        "type": "Microsoft.Insights/metricAlerts"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "existenceCondition": {
+                        "allOf": [
+                            {
+                                "equals": "Microsoft.Storage/storageAccounts",
+                                "field": "Microsoft.Insights/metricAlerts/criteria.Microsoft-Azure-Monitor-MultipleResourceMultipleMetricCriteria.allOf[*].metricNamespace"
+                            },
+                            {
+                                "contains": "Storage Account Avaliability",
+                                "field": "Microsoft.Insights/metricAlerts/criteria.Microsoft-Azure-Monitor-MultipleResourceMultipleMetricCriteria.allOf[*].metricName"
+                            },
+                            {
+                                "equals": "[parameters('enabled')]",
+                                "field": "Microsoft.Insights/metricAlerts/enabled"
+                            }
+                        ]
+                    },
+                    "roleDefinitionIds": [
+                        "/providers/microsoft.authorization/roleDefinitions/749f88d5-cbae-40b8-bcfc-e573ddc772fa",
+                        "/providers/microsoft.authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+                    ],
+                    "type": "Microsoft.Insights/metricAlerts"
+                },
+                "effect": "[parameters('effect')]"
+            }
+        }
+    }
+}

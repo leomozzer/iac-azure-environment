@@ -19,6 +19,7 @@ locals {
     "Canada Central"    = "canadacentral"
     "West Europe"       = "weu"
     "westeurope"        = "weu"
+    "west europe"       = "weu"
     "North Europe"      = "neu"
     "northeurope"       = "neu"
     "UK South"          = "uks"
