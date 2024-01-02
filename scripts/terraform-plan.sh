@@ -10,6 +10,9 @@ PLAN_FILE=$ENVIRONMENT.plan
 # Change to the Terraform directory
 cd $WORKING_DIR
 
+#Run terraform formating
+terraform fmt
+
 az storage blob download \
     --file provider.tf \
     --name provider.tf \
@@ -30,9 +33,6 @@ az storage blob download \
 
 # Initialize Terraform (if not already initialized)
 terraform init -reconfigure
-
-#Run terraform formating
-terraform fmt
 
 # Run Terraform plan and save the output to a plan file
 terraform plan -var-file=$VAR_FILE -out=$PLAN_FILE
