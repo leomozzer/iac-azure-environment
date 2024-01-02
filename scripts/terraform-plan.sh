@@ -1,24 +1,26 @@
 #!/bin/bash
 
-environment=prod
-varFile=$environment.tfvars
-outputFile=$environment.plan
-STORAGE_ACCOUNT_NAME="staciacazure"
+WORKING_DIR=./terraform-live
+ENVIRONMENT=prod
+STORAGE_ACCOUNT_NAME=staciacazure
+
+VAR_FILE=$ENVIRONMENT.tfvars
+PLAN_FILE=$ENVIRONMENT.plan
 
 # Change to the Terraform directory
-cd ./terraform-live
+cd $WORKING_DIR
 
 az storage blob download \
     --file provider.tf \
     --name provider.tf \
     --account-name $STORAGE_ACCOUNT_NAME \
-    --container-name prod-tf-files
+    --container-name $ENVIRONMENT-tf-files
 
 az storage blob download \
     --file backend.tf \
     --name backend.tf \
     --account-name $STORAGE_ACCOUNT_NAME \
-    --container-name prod-tf-files
+    --container-name $ENVIRONMENT-tf-files
 
 # Initialize Terraform (if not already initialized)
 terraform init -reconfigure
@@ -27,20 +29,20 @@ terraform init -reconfigure
 terraform fmt
 
 # Run Terraform plan and save the output to a plan file
-terraform plan -var-file=$varFile -out=$outputFile
+terraform plan -var-file=$VAR_FILE -out=$PLAN_FILE
 echo "Terraform plan completed"
 
 az storage blob upload \
-    --container-name $environment-tf-files \
-    --file $outputFile \
-    --name $outputFile \
+    --container-name $ENVIRONMENT-tf-files \
+    --file $PLAN_FILE \
+    --name $PLAN_FILE \
     --account-name $STORAGE_ACCOUNT_NAME \
     --overwrite
 
 az storage blob upload \
-    --container-name $environment-tf-files \
-    --file $environment.tfvars \
-    --name $environment.tfvars \
+    --container-name $ENVIRONMENT-tf-files \
+    --file $VAR_FILE \
+    --name $VAR_FILE \
     --account-name $STORAGE_ACCOUNT_NAME \
     --overwrite
 

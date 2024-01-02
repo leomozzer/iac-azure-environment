@@ -1,21 +1,23 @@
-location=eastus
-resourceGroup=rg-iac-azure
-storageAccount=staciacazure
+#!/bin/bash
+
+WORKING_DIR=./terraform-live
+ENVIRONMENT=prod
 
 # Set the desired values for the backend configuration
+LOCATION=eastus
 RESOURCE_GROUP_NAME="rg-iac-azure"
 STORAGE_ACCOUNT_NAME="staciacazure"
 CONTAINER_NAME="states"
-KEY="prod.tfstate"
+KEY="$ENVIRONMENT.tfstate"
 
-cd ./terraform-live
+cd $WORKING_DIR
 
-az group create --location $location --resource-group $resourceGroup
-az storage account create --resource-group $resourceGroup --name $storageAccount --sku Standard_LRS --kind StorageV2 --encryption-services blob --access-tier Cool --allow-blob-public-access false
-az storage container create --name states --account-name $storageAccount
-az storage container create --name plans --account-name $storageAccount
+az group create --location $LOCATION --resource-group $RESOURCE_GROUP_NAME
+az storage account create --resource-group $RESOURCE_GROUP_NAME --name $STORAGE_ACCOUNT_NAME --sku Standard_LRS --kind StorageV2 --encryption-services blob --access-tier Cool --allow-blob-public-access false
+az storage container create --name states --account-name $STORAGE_ACCOUNT_NAME
+az storage container create --name plans --account-name $STORAGE_ACCOUNT_NAME
 # 
-az storage container create --name prod-tf-files --account-name $storageAccount
+az storage container create --name $ENVIRONMENT-tf-files --account-name $STORAGE_ACCOUNT_NAME
 
 # Create the backend.tf file
 cat <<EOL > backend.tf
@@ -49,15 +51,15 @@ EOL
 
 #Copy provider and backend file create locally to tffiles container
 az storage blob upload \
-    --container-name prod-tf-files \
+    --container-name $ENVIRONMENT-tf-files \
     --file provider.tf \
     --name provider.tf \
-    --account-name $storageAccount \
+    --account-name $STORAGE_ACCOUNT_NAME \
     --overwrite
 
 az storage blob upload \
-    --container-name prod-tf-files \
+    --container-name $ENVIRONMENT-tf-files \
     --file backend.tf \
     --name backend.tf \
-    --account-name $storageAccount \
+    --account-name $STORAGE_ACCOUNT_NAME \
     --overwrite
