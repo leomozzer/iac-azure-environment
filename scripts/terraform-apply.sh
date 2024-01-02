@@ -7,6 +7,18 @@ STORAGE_ACCOUNT_NAME=staciacazure
 # Change to the Terraform directory
 cd $WORKING_DIR
 
+az storage blob download \
+    --file provider.tf \
+    --name provider.tf \
+    --account-name $STORAGE_ACCOUNT_NAME \
+    --container-name $ENVIRONMENT-tf-files
+
+az storage blob download \
+    --file backend.tf \
+    --name backend.tf \
+    --account-name $STORAGE_ACCOUNT_NAME \
+    --container-name $ENVIRONMENT-tf-files
+
  az storage blob download \
     --file $PLAN_FILE \
     --name $PLAN_FILE \
