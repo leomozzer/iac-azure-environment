@@ -8,7 +8,6 @@ on:
 jobs:
   plan:
     name: "Plan Job"
-    needs: audit
     strategy:
       matrix:
         stage: [prod]
