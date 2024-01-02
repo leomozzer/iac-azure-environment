@@ -12,12 +12,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: azure/setup-terraform@v2
+      - name: Azure Login
+        uses: azure/login@v1
         with:
-          client-id: ${{ secrets.ARM_CLIENT_ID }}
-          client-secret: ${{ secrets.ARM_CLIENT_SECRET }}
-          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          tenant-id: ${{ secrets.ARM_TENANT_ID }}
-          
+          creds: ${{ secrets.AZURE_SP }}
+
+      - uses: hashicorp/setup-terraform@v2
+
       - name: Run bash Terraform Plan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
         run: bash ./scripts/terraform-plan.sh
+        
