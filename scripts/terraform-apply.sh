@@ -2,22 +2,22 @@
 WORKING_DIR=./terraform-live
 ENVIRONMENT=prod
 PLAN_FILE=$ENVIRONMENT.plan
-STORAGE_ACCOUNT_NAME="staciacazure"
+STORAGE_ACCOUNT_NAME=staciacazure
 
 # Change to the Terraform directory
 cd $WORKING_DIR
 
  az storage blob download \
-          --file $PLAN_FILE \
-          --name $PLAN_FILE \
-          --account-name $STORAGE_ACCOUNT_NAME \
-          --container-name $ENVIRONMENT-tf-files
+    --file $PLAN_FILE \
+    --name $PLAN_FILE \
+    --account-name $STORAGE_ACCOUNT_NAME \
+    --container-name $ENVIRONMENT-tf-files
 
  az storage blob download \
-          --file $ENVIRONMENT.tfvars \
-          --name $ENVIRONMENT.tfvars \
-          --account-name $STORAGE_ACCOUNT_NAME \
-          --container-name $ENVIRONMENT-tf-files
+    --file $ENVIRONMENT.tfvars \
+    --name $ENVIRONMENT.tfvars \
+    --account-name $STORAGE_ACCOUNT_NAME \
+    --container-name $ENVIRONMENT-tf-files
 
 #https://stackoverflow.com/questions/70049758/terraform-for-each-one-by-one
 TF_CLI_ARGS_apply="-parallelism=1"
