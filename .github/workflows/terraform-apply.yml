@@ -1,39 +1,14 @@
-name: 'Terraform Plan'
+name: 'Terraform Apply'
 on:
   workflow_call:
-    inputs:
-      AZURE_CLI_VERSION:
-        type: string
-        description: "Azure cli version"
-        required: false
-        default: 'latest'
-      WORKING_DIR:
-        type: string
-        description: "working directory"
-        required: true
-      STORAGE_ACCOUNT_NAME:
-        type: string
-        description: "Name of the storage account"
-        required: true
-      CONTAINER_NAME:
-        type: string
-        description: "Container name"
-        required: false
-        default: plans
-      STAGE:
-        type: string
-        description: "Deployment stage"
-        required: true
-    secrets:
-      AZURE_SP:
-        description: "Credentials of the Azure SP"
-        required: true
+  push:
+    branches:
+      - main
 
 jobs:
-  apply:
-    name: "Apply"
+  plan:
+    name: "Plan"
     runs-on: ubuntu-latest
-    environment: ${{ inputs.STAGE }}
     steps:
       - uses: actions/checkout@v3
 
@@ -44,32 +19,11 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v2
 
-      - name: Copy ${{ inputs.STAGE }} live plan from Storage
-        uses: azure/CLI@v1
-        with:
-          azcliversion: ${{ inputs.AZURE_CLI_VERSION }}
-          inlineScript: |
-            az storage blob download \
-            --file terraform-live.tar \
-            --name terraform-live-${{ inputs.STAGE }}-${{ github.run_number }}.tar \
-            --account-name ${{ inputs.STORAGE_ACCOUNT_NAME }} \
-            --container-name ${{ inputs.CONTAINER_NAME }}
-            tar -xvf terraform-live.tar -C ./
-
-      - name: Copy ${{ inputs.STAGE }} modules from Storage
-        uses: azure/CLI@v1
-        with:
-          azcliversion: ${{ inputs.AZURE_CLI_VERSION }}
-          inlineScript: |
-            az storage blob download \
-            --file terraform-modules.tar \
-            --name terraform-modules-${{ inputs.STAGE }}-${{ github.run_number }}.tar \
-            --account-name ${{ inputs.STORAGE_ACCOUNT_NAME }} \
-            --container-name ${{ inputs.CONTAINER_NAME }}
-            tar -xvf terraform-modules.tar -C ./
-
-      - name: Terraform Apply
-        shell: bash
-        run:
-          terraform apply -lock-timeout=10m "${{ inputs.STAGE }}.plan"
-        working-directory: ${{ inputs.WORKING_DIR }}/terraform-live
+      - name: Run bash Terraform Plan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+        run: bash ./scripts/terraform-apply.sh
+        
