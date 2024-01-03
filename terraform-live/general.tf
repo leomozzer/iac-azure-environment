@@ -11,10 +11,10 @@ resource "azurerm_key_vault" "kv_general" {
   location            = azurerm_resource_group.rg_general.location
   tenant_id           = data.azurerm_client_config.current.tenant_id
 
-  soft_delete_retention_days = 7
-  purge_protection_enabled   = false
+  soft_delete_retention_days = local.kv_general_soft_delete_retention_days
+  purge_protection_enabled   = local.kv_general_purge_protection_enabled
 
-  sku_name = "standard"
+  sku_name = local.kv_general_sku_name
 
   access_policy {
     tenant_id = data.azurerm_client_config.current.tenant_id

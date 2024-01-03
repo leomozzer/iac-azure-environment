@@ -81,11 +81,16 @@ locals {
 #########################
 
 locals {
-  rg_general_name        = "rg-${var.environment_name}-${local.region_name_standardize[var.principal_location]}-general"
-  kv_general_name        = "kv-${var.environment_name}-${local.region_name_standardize[var.principal_location]}-general"
-  rg_defaul_monitoring   = "rg-${var.environment_name}-${local.region_name_standardize[var.principal_location]}-monitoring"
-  rg_law_operations_name = "rg-operations-01"
-  law_operations_name    = "law-operations-01"
+  rg_general_name                       = "rg-${var.environment_name}-${local.region_name_standardize[var.principal_location]}-general"
+  kv_general_name                       = "kv-${var.environment_name}-${local.region_name_standardize[var.principal_location]}-general"
+  kv_general_soft_delete_retention_days = 7
+  kv_general_purge_protection_enabled   = false
+  kv_general_sku_name                   = "standard"
+  rg_defaul_monitoring                  = "rg-${var.environment_name}-${local.region_name_standardize[var.principal_location]}-monitoring"
+  rg_law_operations_name                = "rg-${local.region_name_standardize[var.principal_location]}-operations-01"
+  law_operations_name                   = "law-${local.region_name_standardize[var.principal_location]}-operations-01"
+  law_operations_sku                    = "PerGB2018"
+  law_operations_retention_in_days      = 30
 }
 
 ##################

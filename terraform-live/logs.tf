@@ -9,6 +9,6 @@ resource "azurerm_log_analytics_workspace" "laws_operations" {
   name                = local.law_operations_name
   location            = azurerm_resource_group.rg_laws_operations.location
   resource_group_name = azurerm_resource_group.rg_laws_operations.name
-  sku                 = "PerGB2018"
-  retention_in_days   = 30
+  sku                 = local.law_operations_sku
+  retention_in_days   = local.law_operations_retention_in_days
 }
