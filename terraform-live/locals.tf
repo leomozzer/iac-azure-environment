@@ -1,8 +1,8 @@
 # Define a function to standardize Azure region names
 #https://github.com/claranet/terraform-azurerm-regions/blob/master/REGIONS.md
-##########################
-#     Commom locals      #
-##########################
+#######################
+#    Commom locals    #
+#######################
 locals {
   region_name_standardize = {
     "East US"           = "eus"
@@ -76,9 +76,9 @@ locals {
   ]
 }
 
-##########################
-#  Resource naming local #
-##########################
+#########################
+#    Resource naming    #
+#########################
 
 locals {
   rg_general_name        = "rg-${var.environment_name}-${local.region_name_standardize[var.principal_location]}-general"
@@ -88,9 +88,9 @@ locals {
   law_operations_name    = "law-operations-01"
 }
 
-##########################
-#    Vnet Hub Local      #
-##########################
+##################
+#    Vnet Hub    #
+##################
 
 locals {
   default_vnet_hub = length(var.default_vnet_hub_definition["hubs"]) > 0 ? flatten([
@@ -127,9 +127,9 @@ locals {
   ])
 }
 
-##########################
-#    Vnet Spoke Local    #
-##########################
+###################
+#   Vnet Spoke    #
+###################
 
 locals {
   default_vnet_spokes = length(var.default_vnet_spoke_definition[0]["spokes"]) > 0 ? flatten([
@@ -169,43 +169,9 @@ locals {
   ])
 }
 
-##########################
-#    Monitoring Local    #
-##########################
-
-locals {
-  filtered_storaged_accounts = [for res, config in data.azurerm_resources.storage_accounts.resources : {
-    name                = config.name
-    resource_group_name = config.resource_group_name
-    id                  = config.id
-    tags                = config.tags
-    #alerts              = [for alert, index in loclocal.storage_accounts_alerts : alert]
-  } if(config.resource_group_name != "rg-exclude-from-search-dev-we")]
-  default_alerts = {
-    "storage_account_avaliability" : {
-      "name" : "Storage Account Avaliability",
-      "description" : "Storage Account Avaliability",
-      type : "storageaccounts",
-      "metrics" : {
-        metric_name          = "Availability"
-        enabled              = true
-        evaluation_frequency = "PT5M"
-        severity             = 1
-        window_size          = "PT15M"
-        availability = {
-          threshold              = 90
-          operator               = "LessThan"
-          time_aggregation       = "Average"
-          skip_metric_validation = false
-        }
-      }
-    }
-  }
-}
-
-##########################
-#    Policy Local    #
-##########################
+################
+#    Policy    #
+################
 
 locals {
   policy_definitions = [
