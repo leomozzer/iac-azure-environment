@@ -1,3 +1,20 @@
+# resource "azurerm_resource_group" "rg_policies" {
+#   name     = local.resource_group_name_policies
+#   location = var.principal_location
+# }
+
+# resource "azurerm_user_assigned_identity" "umi_policies" {
+#   name                = local.managed_identity_name
+#   location            = var.principal_location
+#   resource_group_name = azurerm_resource_group.rg_policies.name
+# }
+
+# resource "azurerm_role_assignment" "role_assigment_umi" {
+#   scope                = data.azurerm_management_group.management_group.id
+#   role_definition_name = "Contributor"
+#   principal_id         = azurerm_user_assigned_identity.umi_policies.principal_id
+# }
+
 
 module "whitelist_regions" {
   source              = "gettek/policy-as-code/azurerm//modules/definition"
@@ -69,10 +86,12 @@ module "diagnostics_initiative" {
   re_evaluate_compliance = false
   skip_remediation       = false
   skip_role_assignment   = false
+  role_assignment_scope  = data.azurerm_management_group.management_group.id
   remediation_scope      = data.azurerm_management_group.management_group.id
 
   assignment_parameters = {
     workspaceId    = azurerm_log_analytics_workspace.laws_operations.id
+    resourceGroup  = local.law_operations_name
     metricsEnabled = true
     logsEnabled    = true
   }

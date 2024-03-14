@@ -11,8 +11,8 @@ locals {
     "West US"           = "wus"
     "North Central US"  = "ncus"
     "South Central US"  = "scus"
-    "East US 2"         = "eastus2"
-    "West US 2"         = "westus2"
+    "East US 2"         = "eus2"
+    "West US 2"         = "wus2"
     "Central US"        = "cus"
     "West Central US"   = "wcus"
     "Canada East"       = "canadaeast"
@@ -28,8 +28,8 @@ locals {
     "France South"      = "francesouth"
     "Germany North"     = "germanynorth"
     "Germany West"      = "germanywest"
-    "Switzerland North" = "chnorth"
-    "Switzerland West"  = "chwest"
+    "Switzerland North" = "swnorth"
+    "Switzerland West"  = "swwest"
     "Norway East"       = "noeast"
     "Norway West"       = "nowest"
     # Add more mappings as needed
@@ -81,12 +81,12 @@ locals {
 #########################
 
 locals {
-  rg_general_name                       = "rg-${var.environment_name}-${local.region_name_standardize[var.principal_location]}-general"
-  kv_general_name                       = "kv-${var.environment_name}-${local.region_name_standardize[var.principal_location]}-general"
+  rg_general_name                       = "rg-${var.environment_name}-${local.region_name_standardize[var.principal_location]}-general-01"
+  kv_general_name                       = "kv-${var.environment_name}-${local.region_name_standardize[var.principal_location]}-general-01"
   kv_general_soft_delete_retention_days = 7
   kv_general_purge_protection_enabled   = false
   kv_general_sku_name                   = "standard"
-  rg_defaul_monitoring                  = "rg-${var.environment_name}-${local.region_name_standardize[var.principal_location]}-monitoring"
+  rg_defaul_monitoring                  = "rg-${var.environment_name}-${local.region_name_standardize[var.principal_location]}-monitoring-01"
   rg_law_operations_name                = "rg-${local.region_name_standardize[var.principal_location]}-operations-01"
   law_operations_name                   = "law-${local.region_name_standardize[var.principal_location]}-operations-01"
   law_operations_sku                    = "PerGB2018"

@@ -271,7 +271,7 @@
                                 "field": "Microsoft.Insights/metricAlerts/criteria.Microsoft-Azure-Monitor-MultipleResourceMultipleMetricCriteria.allOf[*].metricNamespace"
                             },
                             {
-                                "contains": "Storage Account Avaliability",
+                                "contains": "Availability",
                                 "field": "Microsoft.Insights/metricAlerts/criteria.Microsoft-Azure-Monitor-MultipleResourceMultipleMetricCriteria.allOf[*].metricName"
                             },
                             {
