@@ -10,6 +10,6 @@
 #   value = local.default_vnet_spokes
 # }
 
-output "subs" {
-  value = local.default_backup_configuration
-}
+# output "subs" {
+#   value = local.default_backup_configuration
+# }
