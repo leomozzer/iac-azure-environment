@@ -26,8 +26,10 @@ override.tf.json
 # Include override files you do wish to add to version control using negated pattern
 # !example_override.tf
 
-# Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
-# example: *tfplan*
+# Ignore plan output files — may contain provider credentials in binary form
+*.tfplan
+*.tfplan.*
+*.*plan
 
 # Ignore CLI configuration files
 .terraformrc
@@ -39,4 +41,4 @@ backend.tf
 !infra/environments/prod/backend.tf
 
 #Claude configuration files, which are used to configure the Claude AI assistant. These files may contain sensitive information, such as API keys or credentials, and should not be checked in.
-docs\superpowers
+docs/superpowers
