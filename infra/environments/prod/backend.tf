@@ -1,11 +1,13 @@
-# Initialize with: terraform init \
-#   -backend-config="resource_group_name=<rg>" \
-#   -backend-config="storage_account_name=<sa>"
+# Partial backend configuration.
+# resource_group_name and storage_account_name are injected at init time via -backend-config flags.
+# In CI: see .github/actions/terraform-plan/action.yml (terraform init step).
+# Locally:
+#   terraform init \
+#     -backend-config="resource_group_name=rg-tfstate-eus-001" \
+#     -backend-config="storage_account_name=sttfstateiaceus001"
 terraform {
   backend "azurerm" {
-    resource_group_name  = ""
-    storage_account_name = ""
-    container_name       = "tfstate"
-    key                  = "prod.tfstate"
+    container_name = "tfstate"
+    key            = "prod.tfstate"
   }
 }
