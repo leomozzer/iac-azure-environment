@@ -1,0 +1,43 @@
+name: "0 - Terraform Backend"
+# Run this workflow ONCE to bootstrap the Azure storage account for Terraform state.
+# Safe to re-run — all steps are idempotent.
+
+on:
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: "Deployment stage"
+        required: true
+        default: dev
+        type: choice
+        options: [dev, test, prod]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  RESOURCE_GROUP_NAME: rg-tfstate-eus-001
+  RESOURCE_GROUP_LOCATION: eastus
+  # Must be globally unique, lowercase alphanumeric, max 24 chars — change before first run
+  STORAGE_ACCOUNT_NAME: sttfstateiaceus001
+
+jobs:
+  backend:
+    name: "Bootstrap Backend (${{ inputs.stage }})"
+    runs-on: ubuntu-latest
+    concurrency:
+      group: backend-${{ inputs.stage }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/azure-backend
+        with:
+          azure-client-id: ${{ secrets.ARM_CLIENT_ID }}
+          azure-tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          azure-subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
+          resource-group-location: ${{ env.RESOURCE_GROUP_LOCATION }}
+          storage-account-name: ${{ env.STORAGE_ACCOUNT_NAME }}
+          stage: ${{ inputs.stage }}
