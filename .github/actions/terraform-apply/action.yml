@@ -41,7 +41,7 @@ runs:
             --account-name "${{ inputs.storage-account-name }}" \
             --container-name "plans" \
             --name "plan-${{ inputs.stage }}-${{ github.run_number }}.tar.gz" \
-            --file "plan-${{ inputs.stage }}-${{ github.run_number }}.tar.gz" \
+            --file "${{ inputs.working-dir }}/plan-${{ inputs.stage }}-${{ github.run_number }}.tar.gz" \
             --auth-mode login
 
     - name: Extract plan archive
