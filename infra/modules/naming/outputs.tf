@@ -42,6 +42,10 @@ output "nat_gateway" {
   value = "ng-${local.base}"
 }
 
+output "network_watcher" {
+  value = "nw-${local.base}"
+}
+
 output "network_watcher_flow_log" {
   value = "flw-${local.base}"
 }

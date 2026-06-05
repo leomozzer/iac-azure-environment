@@ -285,94 +285,98 @@ resource "azurerm_storage_account" "flow_logs_avd" {
   }
 }
 
-# Network Watcher data sources (Azure auto-creates per region per subscription)
-data "azurerm_network_watcher" "hub" {
+resource "azurerm_network_watcher" "hub" {
   provider            = azurerm.subscription_hub
-  name                = "NetworkWatcher_${var.region}"
-  resource_group_name = "NetworkWatcherRG"
+  name                = module.naming_hub.network_watcher
+  location            = var.region
+  resource_group_name = azurerm_resource_group.hub.name
 }
 
-data "azurerm_network_watcher" "application" {
+resource "azurerm_network_watcher" "application" {
   provider            = azurerm.subscription_application
-  name                = "NetworkWatcher_${var.region}"
-  resource_group_name = "NetworkWatcherRG"
+  name                = module.naming_application.network_watcher
+  location            = var.region
+  resource_group_name = azurerm_resource_group.application.name
 }
 
-data "azurerm_network_watcher" "avd" {
+resource "azurerm_network_watcher" "avd" {
   provider            = azurerm.subscription_avd
-  name                = "NetworkWatcher_${var.region}"
-  resource_group_name = "NetworkWatcherRG"
+  name                = module.naming_avd.network_watcher
+  location            = var.region
+  resource_group_name = azurerm_resource_group.avd.name
 }
 
-resource "azurerm_network_watcher_flow_log" "hub" {
-  provider                  = azurerm.subscription_hub
-  name                      = module.naming_hub.network_watcher_flow_log
-  network_watcher_name      = data.azurerm_network_watcher.hub.name
-  resource_group_name       = data.azurerm_network_watcher.hub.resource_group_name
-  location                  = var.region
-  storage_account_id        = azurerm_storage_account.flow_logs_hub.id
-  enabled                   = true
-  version                   = 2
-  network_security_group_id = azurerm_network_security_group.hub.id
+# resource "azurerm_network_watcher_flow_log" "hub" {
+#   provider             = azurerm.subscription_hub
+#   name                 = module.naming_hub.network_watcher_flow_log
+#   network_watcher_name = azurerm_network_watcher.hub.name
+#   resource_group_name  = azurerm_network_watcher.hub.resource_group_name
+#   location             = var.region
+#   target_resource_id   = module.vnet_hub.resource_id
+#   storage_account_id   = azurerm_storage_account.flow_logs_hub.id
+#   enabled              = true
+#   version              = 2
 
-  retention_policy {
-    enabled = true
-    days    = 90
-  }
+#   retention_policy {
+#     enabled = true
+#     days    = 90
+#   }
 
-  traffic_analytics {
-    enabled               = true
-    workspace_id          = module.avm-res-operationalinsights-workspace.resource.workspace_id
-    workspace_region      = var.region
-    workspace_resource_id = module.avm-res-operationalinsights-workspace.resource_id
-    interval_in_minutes   = 10
-  }
-}
+#   traffic_analytics {
+#     enabled               = true
+#     workspace_id          = module.avm-res-operationalinsights-workspace.resource.workspace_id
+#     workspace_region      = var.region
+#     workspace_resource_id = module.avm-res-operationalinsights-workspace.resource_id
+#     interval_in_minutes   = 10
+#   }
+# }
 
-resource "azurerm_network_watcher_flow_log" "application" {
-  provider                  = azurerm.subscription_application
-  name                      = module.naming_application.network_watcher_flow_log
-  network_watcher_name      = data.azurerm_network_watcher.application.name
-  resource_group_name       = data.azurerm_network_watcher.application.resource_group_name
-  location                  = var.region
-  storage_account_id        = azurerm_storage_account.flow_logs_application.id
-  enabled                   = true
-  version                   = 2
-  network_security_group_id = azurerm_network_security_group.application.id
-  retention_policy {
-    enabled = true
-    days    = 90
-  }
+# resource "azurerm_network_watcher_flow_log" "application" {
+#   provider             = azurerm.subscription_application
+#   name                 = module.naming_application.network_watcher_flow_log
+#   network_watcher_name = azurerm_network_watcher.application.name
+#   resource_group_name  = azurerm_network_watcher.application.resource_group_name
+#   location             = var.region
+#   target_resource_id   = module.vnet_application.resource_id
+#   storage_account_id   = azurerm_storage_account.flow_logs_application.id
+#   enabled              = true
+#   version              = 2
 
-  traffic_analytics {
-    enabled               = true
-    workspace_id          = module.avm-res-operationalinsights-workspace.resource.workspace_id
-    workspace_region      = var.region
-    workspace_resource_id = module.avm-res-operationalinsights-workspace.resource_id
-    interval_in_minutes   = 10
-  }
-}
+#   retention_policy {
+#     enabled = true
+#     days    = 90
+#   }
 
-resource "azurerm_network_watcher_flow_log" "avd" {
-  provider                  = azurerm.subscription_avd
-  name                      = module.naming_avd.network_watcher_flow_log
-  network_watcher_name      = data.azurerm_network_watcher.avd.name
-  resource_group_name       = data.azurerm_network_watcher.avd.resource_group_name
-  location                  = var.region
-  storage_account_id        = azurerm_storage_account.flow_logs_avd.id
-  enabled                   = true
-  version                   = 2
-  network_security_group_id = azurerm_network_security_group.avd.id
-  retention_policy {
-    enabled = true
-    days    = 90
-  }
+#   traffic_analytics {
+#     enabled               = true
+#     workspace_id          = module.avm-res-operationalinsights-workspace.resource.workspace_id
+#     workspace_region      = var.region
+#     workspace_resource_id = module.avm-res-operationalinsights-workspace.resource_id
+#     interval_in_minutes   = 10
+#   }
+# }
 
-  traffic_analytics {
-    enabled               = true
-    workspace_id          = module.avm-res-operationalinsights-workspace.resource.workspace_id
-    workspace_region      = var.region
-    workspace_resource_id = module.avm-res-operationalinsights-workspace.resource_id
-    interval_in_minutes   = 10
-  }
-}
+# resource "azurerm_network_watcher_flow_log" "avd" {
+#   provider             = azurerm.subscription_avd
+#   name                 = module.naming_avd.network_watcher_flow_log
+#   network_watcher_name = azurerm_network_watcher.avd.name
+#   resource_group_name  = azurerm_network_watcher.avd.resource_group_name
+#   location             = var.region
+#   target_resource_id   = module.vnet_avd.resource_id
+#   storage_account_id   = azurerm_storage_account.flow_logs_avd.id
+#   enabled              = true
+#   version              = 2
+
+#   retention_policy {
+#     enabled = true
+#     days    = 90
+#   }
+
+#   traffic_analytics {
+#     enabled               = true
+#     workspace_id          = module.avm-res-operationalinsights-workspace.resource.workspace_id
+#     workspace_region      = var.region
+#     workspace_resource_id = module.avm-res-operationalinsights-workspace.resource_id
+#     interval_in_minutes   = 10
+#   }
+# }
