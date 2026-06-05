@@ -41,3 +41,7 @@ output "vnet_peering" {
 output "nat_gateway" {
   value = "ng-${local.base}"
 }
+
+output "network_watcher_flow_log" {
+  value = "flw-${local.base}"
+}

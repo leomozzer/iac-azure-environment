@@ -110,3 +110,9 @@ runs:
             --account-name "${{ inputs.storage-account-name }}" \
             --auth-mode login \
             --output none || true
+
+          az storage container create \
+            --name tfvars \
+            --account-name "${{ inputs.storage-account-name }}" \
+            --auth-mode login \
+            --output none || true

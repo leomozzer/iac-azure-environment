@@ -65,13 +65,30 @@ runs:
           -backend-config="key=${{ inputs.state-key }}" \
           -reconfigure
 
+    - name: Download tfvars from Azure Blob
+      uses: azure/cli@v2
+      with:
+        inlineScript: |
+          az storage blob download \
+            --account-name "${{ inputs.storage-account-name }}" \
+            --container-name "tfvars" \
+            --name "${{ inputs.stage }}.tfvars" \
+            --file "${{ inputs.working-dir }}/${{ inputs.stage }}.tfvars" \
+            --auth-mode login \
+            --no-progress || true
+
     - name: Terraform Plan
       id: plan
       shell: bash
       working-directory: ${{ inputs.working-dir }}
       env:
         ARM_USE_OIDC: "true"
-      run: terraform plan -out="${{ inputs.stage }}.tfplan" -lock-timeout=10m
+      run: |
+        VAR_FILE_FLAG=""
+        if [ -f "${{ inputs.stage }}.tfvars" ]; then
+          VAR_FILE_FLAG="-var-file=${{ inputs.stage }}.tfvars"
+        fi
+        terraform plan -out="${{ inputs.stage }}.tfplan" -lock-timeout=10m $VAR_FILE_FLAG
 
     - name: Capture Plan Text
       id: show-plan
