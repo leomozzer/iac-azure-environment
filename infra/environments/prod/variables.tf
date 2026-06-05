@@ -15,3 +15,18 @@ variable "instance" {
   description = "Zero-padded 3-digit instance number"
   default     = "001"
 }
+
+variable "hub_subscription_id" {
+  type        = string
+  description = "Azure subscription ID for the hub VNet (Subscription A)"
+}
+
+variable "app_subscription_id" {
+  type        = string
+  description = "Azure subscription ID for the application spoke (Subscription B)"
+}
+
+variable "avd_subscription_id" {
+  type        = string
+  description = "Azure subscription ID for the AVD spoke (Subscription C)"
+}
