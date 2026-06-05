@@ -1,6 +1,7 @@
 variable "purpose" {
   type        = string
   description = "Workload descriptor, lowercase hyphen-separated (e.g., operations)"
+  default     = "operations"
 }
 
 variable "region" {

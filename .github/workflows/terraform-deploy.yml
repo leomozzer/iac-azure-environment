@@ -25,9 +25,9 @@ env:
   STAGE: ${{ inputs.stage || 'prod' }}
   RESOURCE_GROUP_NAME: rg-tfstate-eus-001
   STORAGE_ACCOUNT_NAME: sttfstateiaceus001
-  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
   ARM_USE_OIDC: "true"
 
 jobs:
@@ -58,9 +58,9 @@ jobs:
         uses: ./.github/actions/terraform-plan
         with:
           working-dir: ./infra/environments/${{ inputs.stage || 'prod' }}
-          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          azure-client-id: ${{ secrets.ARM_CLIENT_ID }}
+          azure-tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          azure-subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
           storage-account-name: ${{ env.STORAGE_ACCOUNT_NAME }}
           container-name: tfstate
@@ -112,8 +112,8 @@ jobs:
       - uses: ./.github/actions/terraform-apply
         with:
           working-dir: ./infra/environments/${{ inputs.stage || 'prod' }}
-          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          azure-client-id: ${{ secrets.ARM_CLIENT_ID }}
+          azure-tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          azure-subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           storage-account-name: ${{ env.STORAGE_ACCOUNT_NAME }}
           stage: ${{ inputs.stage || 'prod' }}

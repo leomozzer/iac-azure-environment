@@ -39,7 +39,7 @@ terraform.rc
 
 #Backend override files, which are used to override the default backend configuration
 # for example, to use a local backend instead of a remote one. These files may contain sensitive information, such as access keys or credentials, and should not be checked in.
-backend.tf
+**/backend.tf
 
 #Claude configuration files, which are used to configure the Claude AI assistant. These files may contain sensitive information, such as API keys or credentials, and should not be checked in.
 docs/superpowers
