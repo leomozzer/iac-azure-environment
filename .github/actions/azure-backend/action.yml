@@ -1,5 +1,13 @@
 name: "Setup Terraform Backend"
-description: "Idempotent: creates Azure RG, storage account, and containers for Terraform state"
+description: |
+  Idempotent: creates Azure RG, storage account, and containers for Terraform state.
+
+  RBAC requirements for the service principal running this action:
+    - Contributor on the subscription (to create RG and storage account)
+    - Storage Blob Data Contributor on the storage account (for --auth-mode login on container ops)
+
+  This action automatically grants Storage Blob Data Contributor to the caller service principal
+  on the storage account after creation, so no manual role assignment is needed for blob operations.
 
 inputs:
   azure-client-id:
@@ -57,6 +65,23 @@ runs:
             --allow-blob-public-access false \
             --min-tls-version TLS1_2 \
             --output none
+
+    - name: Grant Storage Blob Data Contributor to Service Principal
+      # --auth-mode login on container create requires this role on the storage account.
+      # Contributor alone is not enough for data-plane operations.
+      uses: azure/cli@v2
+      with:
+        inlineScript: |
+          STORAGE_ID=$(az storage account show \
+            --name "${{ inputs.storage-account-name }}" \
+            --resource-group "${{ inputs.resource-group-name }}" \
+            --query id -o tsv)
+
+          az role assignment create \
+            --role "Storage Blob Data Contributor" \
+            --assignee "${{ inputs.azure-client-id }}" \
+            --scope "$STORAGE_ID" \
+            --output none || true
 
     - name: Enable Blob Versioning and Soft Delete
       uses: azure/cli@v2
