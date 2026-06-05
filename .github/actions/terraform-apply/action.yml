@@ -17,6 +17,10 @@ inputs:
   stage:
     description: "Deployment stage (dev/test/prod)"
     required: true
+  terraform-version:
+    description: "Must match the version used in terraform-plan — plan files are version-locked"
+    required: false
+    default: "1.9.0"
 
 runs:
   using: composite
@@ -31,6 +35,7 @@ runs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
+        terraform_version: ${{ inputs.terraform-version }}
         terraform_wrapper: false
 
     - name: Download plan archive from Azure Blob
