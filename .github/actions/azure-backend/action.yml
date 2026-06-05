@@ -1,0 +1,87 @@
+name: "Setup Terraform Backend"
+description: "Idempotent: creates Azure RG, storage account, and containers for Terraform state"
+
+inputs:
+  azure-client-id:
+    description: "Azure app registration client ID (OIDC)"
+    required: true
+  azure-tenant-id:
+    description: "Azure tenant ID"
+    required: true
+  azure-subscription-id:
+    description: "Azure subscription ID"
+    required: true
+  resource-group-name:
+    description: "Name of the resource group to create"
+    required: true
+  resource-group-location:
+    description: "Azure region (e.g. eastus)"
+    required: true
+  storage-account-name:
+    description: "Storage account name — must be globally unique, max 24 chars, lowercase alphanumeric"
+    required: true
+  stage:
+    description: "Deployment stage tag (dev/test/prod)"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Azure Login (OIDC)
+      uses: azure/login@v2
+      with:
+        client-id: ${{ inputs.azure-client-id }}
+        tenant-id: ${{ inputs.azure-tenant-id }}
+        subscription-id: ${{ inputs.azure-subscription-id }}
+
+    - name: Create Resource Group
+      uses: azure/cli@v2
+      with:
+        inlineScript: |
+          az group create \
+            --location "${{ inputs.resource-group-location }}" \
+            --name "${{ inputs.resource-group-name }}" \
+            --tags "UseCase=TerraformBackend" "Stage=${{ inputs.stage }}" \
+            --output none
+
+    - name: Create Storage Account
+      uses: azure/cli@v2
+      with:
+        inlineScript: |
+          az storage account create \
+            --resource-group "${{ inputs.resource-group-name }}" \
+            --name "${{ inputs.storage-account-name }}" \
+            --sku Standard_LRS \
+            --kind StorageV2 \
+            --access-tier Cool \
+            --allow-blob-public-access false \
+            --min-tls-version TLS1_2 \
+            --output none
+
+    - name: Enable Blob Versioning and Soft Delete
+      uses: azure/cli@v2
+      with:
+        inlineScript: |
+          az storage account blob-service-properties update \
+            --account-name "${{ inputs.storage-account-name }}" \
+            --resource-group "${{ inputs.resource-group-name }}" \
+            --enable-versioning true \
+            --enable-delete-retention true \
+            --delete-retention-days 30 \
+            --output none
+
+    - name: Create Containers
+      uses: azure/cli@v2
+      with:
+        inlineScript: |
+          az storage container create \
+            --name tfstate \
+            --account-name "${{ inputs.storage-account-name }}" \
+            --auth-mode login \
+            --output none
+
+          az storage container create \
+            --name plans \
+            --account-name "${{ inputs.storage-account-name }}" \
+            --auth-mode login \
+            --output none
