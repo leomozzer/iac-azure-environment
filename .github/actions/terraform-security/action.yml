@@ -1,0 +1,26 @@
+name: "Terraform Security Scan"
+description: "tfsec security scan on Terraform modules and target environment — both must pass before apply"
+
+inputs:
+  working-dir:
+    description: "Path to the Terraform environment directory (e.g. ./infra/environments/prod)"
+    required: true
+  modules-dir:
+    description: "Path to the Terraform modules directory"
+    required: false
+    default: "./infra/modules"
+
+runs:
+  using: composite
+  steps:
+    - name: tfsec — Scan Modules
+      uses: aquasecurity/tfsec-action@v1.0.3
+      with:
+        working_directory: ${{ inputs.modules-dir }}
+        github_token: ${{ github.token }}
+
+    - name: tfsec — Scan Environment
+      uses: aquasecurity/tfsec-action@v1.0.3
+      with:
+        working_directory: ${{ inputs.working-dir }}
+        github_token: ${{ github.token }}

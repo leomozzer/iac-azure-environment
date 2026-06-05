@@ -1,61 +1,119 @@
-name: 'Terraform Deploy'
+name: "Terraform Deploy"
+
 on:
-  workflow_call:
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: "Deployment stage"
+        required: true
+        default: prod
+        type: choice
+        options: [dev, test, prod]
   push:
-    branches:
-      - main
+    branches: [main]
+    paths: ["infra/**"]
+  pull_request:
+    branches: [main]
+    paths: ["infra/**"]
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+env:
+  STAGE: ${{ inputs.stage || 'prod' }}
+  RESOURCE_GROUP_NAME: rg-tfstate-eus-001
+  STORAGE_ACCOUNT_NAME: sttfstateiaceus001
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_USE_OIDC: "true"
 
 jobs:
-  plan:
-    name: "Plan Job"
-    strategy:
-      matrix:
-        stage: [prod]
+  validate:
+    name: "Validate (${{ inputs.stage || 'prod' }})"
     runs-on: ubuntu-latest
-    concurrency: ${{ matrix.stage }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Azure Login
-        uses: azure/login@v1
+      - uses: ./.github/actions/terraform-validate
         with:
-          creds: ${{ secrets.AZURE_SP }}
+          working-dir: ./infra/environments/${{ inputs.stage || 'prod' }}
 
-      - uses: hashicorp/setup-terraform@v2
+  plan:
+    name: "Plan (${{ inputs.stage || 'prod' }})"
+    needs: validate
+    runs-on: ubuntu-latest
+    concurrency:
+      group: plan-${{ inputs.stage || 'prod' }}
+      cancel-in-progress: false
+    outputs:
+      plan-text: ${{ steps.plan.outputs.plan-text }}
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Run bash Terraform Plan
-        env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-        run: bash ./scripts/terraform-plan.sh
+      - name: Terraform Plan
+        id: plan
+        uses: ./.github/actions/terraform-plan
+        with:
+          working-dir: ./infra/environments/${{ inputs.stage || 'prod' }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
+          storage-account-name: ${{ env.STORAGE_ACCOUNT_NAME }}
+          container-name: tfstate
+          state-key: ${{ inputs.stage || 'prod' }}.tfstate
+          stage: ${{ inputs.stage || 'prod' }}
+
+      - name: Post Plan as PR Comment
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: terraform-plan-${{ inputs.stage || 'prod' }}
+          message: |
+            ## Terraform Plan — `${{ inputs.stage || 'prod' }}`
+
+            <details><summary>Show Plan</summary>
+
+            ```
+            ${{ steps.plan.outputs.plan-text }}
+            ```
+
+            </details>
+
+            *Run: [`${{ github.run_number }}`](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})*
+
+  security:
+    name: "Security Scan (${{ inputs.stage || 'prod' }})"
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/terraform-security
+        with:
+          working-dir: ./infra/environments/${{ inputs.stage || 'prod' }}
+          modules-dir: ./infra/modules
 
   apply:
-    name: "Apply Job"
-    needs: plan
-    strategy:
-      matrix:
-        stage: [prod]
+    name: "Apply (${{ inputs.stage || 'prod' }})"
+    needs: [plan, security]
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    environment: ${{ matrix.stage }}
-    defaults:
-     run:
-       shell: bash
+    environment: ${{ inputs.stage || 'prod' }}
+    concurrency:
+      group: apply-${{ inputs.stage || 'prod' }}
+      cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Azure Login
-        uses: azure/login@v1
+      - uses: ./.github/actions/terraform-apply
         with:
-          creds: ${{ secrets.AZURE_SP }}
-
-      - uses: hashicorp/setup-terraform@v2
-
-      - name: Run bash Terraform Apply
-        env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-        run: bash ./scripts/terraform-apply.sh
+          working-dir: ./infra/environments/${{ inputs.stage || 'prod' }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          storage-account-name: ${{ env.STORAGE_ACCOUNT_NAME }}
+          stage: ${{ inputs.stage || 'prod' }}

@@ -34,9 +34,9 @@ jobs:
 
       - uses: ./.github/actions/azure-backend
         with:
-          azure-client-id: ${{ secrets.ARM_CLIENT_ID }}
-          azure-tenant-id: ${{ secrets.ARM_TENANT_ID }}
-          azure-subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
           resource-group-location: ${{ env.RESOURCE_GROUP_LOCATION }}
           storage-account-name: ${{ env.STORAGE_ACCOUNT_NAME }}
