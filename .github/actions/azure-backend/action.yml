@@ -78,10 +78,10 @@ runs:
             --name tfstate \
             --account-name "${{ inputs.storage-account-name }}" \
             --auth-mode login \
-            --output none
+            --output none || true
 
           az storage container create \
             --name plans \
             --account-name "${{ inputs.storage-account-name }}" \
             --auth-mode login \
-            --output none
+            --output none || true
