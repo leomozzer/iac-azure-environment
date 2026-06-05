@@ -1,0 +1,40 @@
+name: "Terraform Validate"
+description: "Format check, terraform validate, and tfsec security scan — no backend required"
+
+inputs:
+  working-dir:
+    description: "Path to the Terraform root module (e.g. ./infra/environments/prod)"
+    required: true
+  terraform-version:
+    description: "Terraform CLI version to install"
+    required: false
+    default: "1.9.0"
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ inputs.terraform-version }}
+
+    - name: Terraform Format Check
+      shell: bash
+      working-directory: ${{ inputs.working-dir }}
+      run: terraform fmt -check -recursive -diff
+
+    - name: Terraform Init (no backend)
+      shell: bash
+      working-directory: ${{ inputs.working-dir }}
+      run: terraform init -backend=false
+
+    - name: Terraform Validate
+      shell: bash
+      working-directory: ${{ inputs.working-dir }}
+      run: terraform validate
+
+    - name: tfsec Security Scan
+      uses: aquasecurity/tfsec-action@v1.0.3
+      with:
+        working_directory: ${{ inputs.working-dir }}
+        github_token: ${{ github.token }}
