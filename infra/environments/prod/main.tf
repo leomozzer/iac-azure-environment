@@ -31,22 +31,23 @@ module "naming_hub" {
 
 module "naming_application" {
   source   = "../../modules/naming"
-  purpose  = "application"
+  purpose  = "application-spoke"
   region   = var.region
   instance = var.instance
 }
 
 module "naming_avd" {
   source   = "../../modules/naming"
-  purpose  = "avd"
+  purpose  = "avd-spoke"
   region   = var.region
   instance = var.instance
 }
 
 locals {
-  hub_vnet_name = module.naming_hub.virtual_network
-  # Extracts "eus-001" from "vnet-hub-eus-001" — used to build directional peering names
-  hub_base = trimprefix(local.hub_vnet_name, "vnet-hub-")
+  hub_vnet_name  = module.naming_hub.virtual_network
+  hub_base       = trimprefix(local.hub_vnet_name, "vnet-hub-")
+  app_spoke_base = trimprefix(module.naming_application.virtual_network, "vnet-")
+  avd_spoke_base = trimprefix(module.naming_avd.virtual_network, "vnet-")
 }
 
 # Resource Groups
@@ -173,7 +174,7 @@ module "vnet_avd" {
 
 resource "azurerm_virtual_network_peering" "hub_to_application" {
   provider                  = azurerm.subscription_hub
-  name                      = "peer-${local.hub_vnet_name}-to-application-spoke-${local.hub_base}"
+  name                      = "peer-${local.hub_vnet_name}-to-${local.app_spoke_base}"
   resource_group_name       = azurerm_resource_group.hub.name
   virtual_network_name      = module.vnet_hub.name
   remote_virtual_network_id = module.vnet_application.resource_id
@@ -183,7 +184,7 @@ resource "azurerm_virtual_network_peering" "hub_to_application" {
 
 resource "azurerm_virtual_network_peering" "application_to_hub" {
   provider                  = azurerm.subscription_application
-  name                      = "peer-application-spoke-${local.hub_base}-to-${local.hub_vnet_name}"
+  name                      = "peer-${local.app_spoke_base}-to-${local.hub_vnet_name}"
   resource_group_name       = azurerm_resource_group.application.name
   virtual_network_name      = module.vnet_application.name
   remote_virtual_network_id = module.vnet_hub.resource_id
@@ -193,7 +194,7 @@ resource "azurerm_virtual_network_peering" "application_to_hub" {
 
 resource "azurerm_virtual_network_peering" "hub_to_avd" {
   provider                  = azurerm.subscription_hub
-  name                      = "peer-${local.hub_vnet_name}-to-avd-spoke-${local.hub_base}"
+  name                      = "peer-${local.hub_vnet_name}-to-${local.avd_spoke_base}"
   resource_group_name       = azurerm_resource_group.hub.name
   virtual_network_name      = module.vnet_hub.name
   remote_virtual_network_id = module.vnet_avd.resource_id
@@ -203,7 +204,7 @@ resource "azurerm_virtual_network_peering" "hub_to_avd" {
 
 resource "azurerm_virtual_network_peering" "avd_to_hub" {
   provider                  = azurerm.subscription_avd
-  name                      = "peer-avd-spoke-${local.hub_base}-to-${local.hub_vnet_name}"
+  name                      = "peer-${local.avd_spoke_base}-to-${local.hub_vnet_name}"
   resource_group_name       = azurerm_resource_group.avd.name
   virtual_network_name      = module.vnet_avd.name
   remote_virtual_network_id = module.vnet_hub.resource_id
@@ -306,77 +307,174 @@ resource "azurerm_network_watcher" "avd" {
   resource_group_name = azurerm_resource_group.avd.name
 }
 
-# resource "azurerm_network_watcher_flow_log" "hub" {
-#   provider             = azurerm.subscription_hub
-#   name                 = module.naming_hub.network_watcher_flow_log
-#   network_watcher_name = azurerm_network_watcher.hub.name
-#   resource_group_name  = azurerm_network_watcher.hub.resource_group_name
-#   location             = var.region
-#   target_resource_id   = module.vnet_hub.resource_id
-#   storage_account_id   = azurerm_storage_account.flow_logs_hub.id
-#   enabled              = true
-#   version              = 2
+resource "azurerm_network_watcher_flow_log" "hub" {
+  provider             = azurerm.subscription_hub
+  name                 = module.naming_hub.network_watcher_flow_log
+  network_watcher_name = azurerm_network_watcher.hub.name
+  resource_group_name  = azurerm_network_watcher.hub.resource_group_name
+  location             = var.region
+  target_resource_id   = module.vnet_hub.resource_id
+  storage_account_id   = azurerm_storage_account.flow_logs_hub.id
+  enabled              = true
+  version              = 2
 
-#   retention_policy {
-#     enabled = true
-#     days    = 90
-#   }
+  retention_policy {
+    enabled = true
+    days    = 90
+  }
 
-#   traffic_analytics {
-#     enabled               = true
-#     workspace_id          = module.avm-res-operationalinsights-workspace.resource.workspace_id
-#     workspace_region      = var.region
-#     workspace_resource_id = module.avm-res-operationalinsights-workspace.resource_id
-#     interval_in_minutes   = 10
-#   }
-# }
+  traffic_analytics {
+    enabled               = true
+    workspace_id          = module.avm-res-operationalinsights-workspace.resource.workspace_id
+    workspace_region      = var.region
+    workspace_resource_id = module.avm-res-operationalinsights-workspace.resource_id
+    interval_in_minutes   = 10
+  }
+}
 
-# resource "azurerm_network_watcher_flow_log" "application" {
-#   provider             = azurerm.subscription_application
-#   name                 = module.naming_application.network_watcher_flow_log
-#   network_watcher_name = azurerm_network_watcher.application.name
-#   resource_group_name  = azurerm_network_watcher.application.resource_group_name
-#   location             = var.region
-#   target_resource_id   = module.vnet_application.resource_id
-#   storage_account_id   = azurerm_storage_account.flow_logs_application.id
-#   enabled              = true
-#   version              = 2
+resource "azurerm_network_watcher_flow_log" "application" {
+  provider             = azurerm.subscription_application
+  name                 = module.naming_application.network_watcher_flow_log
+  network_watcher_name = azurerm_network_watcher.application.name
+  resource_group_name  = azurerm_network_watcher.application.resource_group_name
+  location             = var.region
+  target_resource_id   = module.vnet_application.resource_id
+  storage_account_id   = azurerm_storage_account.flow_logs_application.id
+  enabled              = true
+  version              = 2
 
-#   retention_policy {
-#     enabled = true
-#     days    = 90
-#   }
+  retention_policy {
+    enabled = true
+    days    = 90
+  }
 
-#   traffic_analytics {
-#     enabled               = true
-#     workspace_id          = module.avm-res-operationalinsights-workspace.resource.workspace_id
-#     workspace_region      = var.region
-#     workspace_resource_id = module.avm-res-operationalinsights-workspace.resource_id
-#     interval_in_minutes   = 10
-#   }
-# }
+  traffic_analytics {
+    enabled               = true
+    workspace_id          = module.avm-res-operationalinsights-workspace.resource.workspace_id
+    workspace_region      = var.region
+    workspace_resource_id = module.avm-res-operationalinsights-workspace.resource_id
+    interval_in_minutes   = 10
+  }
+}
 
-# resource "azurerm_network_watcher_flow_log" "avd" {
-#   provider             = azurerm.subscription_avd
-#   name                 = module.naming_avd.network_watcher_flow_log
-#   network_watcher_name = azurerm_network_watcher.avd.name
-#   resource_group_name  = azurerm_network_watcher.avd.resource_group_name
-#   location             = var.region
-#   target_resource_id   = module.vnet_avd.resource_id
-#   storage_account_id   = azurerm_storage_account.flow_logs_avd.id
-#   enabled              = true
-#   version              = 2
+resource "azurerm_network_watcher_flow_log" "avd" {
+  provider             = azurerm.subscription_avd
+  name                 = module.naming_avd.network_watcher_flow_log
+  network_watcher_name = azurerm_network_watcher.avd.name
+  resource_group_name  = azurerm_network_watcher.avd.resource_group_name
+  location             = var.region
+  target_resource_id   = module.vnet_avd.resource_id
+  storage_account_id   = azurerm_storage_account.flow_logs_avd.id
+  enabled              = true
+  version              = 2
 
-#   retention_policy {
-#     enabled = true
-#     days    = 90
-#   }
+  retention_policy {
+    enabled = true
+    days    = 90
+  }
 
-#   traffic_analytics {
-#     enabled               = true
-#     workspace_id          = module.avm-res-operationalinsights-workspace.resource.workspace_id
-#     workspace_region      = var.region
-#     workspace_resource_id = module.avm-res-operationalinsights-workspace.resource_id
-#     interval_in_minutes   = 10
-#   }
-# }
+  traffic_analytics {
+    enabled               = true
+    workspace_id          = module.avm-res-operationalinsights-workspace.resource.workspace_id
+    workspace_region      = var.region
+    workspace_resource_id = module.avm-res-operationalinsights-workspace.resource_id
+    interval_in_minutes   = 10
+  }
+}
+
+# ============================================================
+# Diagnostic Settings — VNets and NSGs to Log Analytics
+# ============================================================
+
+resource "azurerm_monitor_diagnostic_setting" "vnet_hub" {
+  provider                   = azurerm.subscription_hub
+  name                       = "diag-${module.naming_hub.virtual_network}"
+  target_resource_id         = module.vnet_hub.resource_id
+  log_analytics_workspace_id = module.avm-res-operationalinsights-workspace.resource_id
+
+  enabled_log {
+    category = "VMProtectionAlerts"
+  }
+
+  metric {
+    category = "AllMetrics"
+    enabled  = true
+  }
+}
+
+resource "azurerm_monitor_diagnostic_setting" "vnet_application" {
+  provider                   = azurerm.subscription_application
+  name                       = "diag-${module.naming_application.virtual_network}"
+  target_resource_id         = module.vnet_application.resource_id
+  log_analytics_workspace_id = module.avm-res-operationalinsights-workspace.resource_id
+
+  enabled_log {
+    category = "VMProtectionAlerts"
+  }
+
+  metric {
+    category = "AllMetrics"
+    enabled  = true
+  }
+}
+
+resource "azurerm_monitor_diagnostic_setting" "vnet_avd" {
+  provider                   = azurerm.subscription_avd
+  name                       = "diag-${module.naming_avd.virtual_network}"
+  target_resource_id         = module.vnet_avd.resource_id
+  log_analytics_workspace_id = module.avm-res-operationalinsights-workspace.resource_id
+
+  enabled_log {
+    category = "VMProtectionAlerts"
+  }
+
+  metric {
+    category = "AllMetrics"
+    enabled  = true
+  }
+}
+
+resource "azurerm_monitor_diagnostic_setting" "nsg_hub" {
+  provider                   = azurerm.subscription_hub
+  name                       = "diag-${module.naming_hub.network_security_group}"
+  target_resource_id         = azurerm_network_security_group.hub.id
+  log_analytics_workspace_id = module.avm-res-operationalinsights-workspace.resource_id
+
+  enabled_log {
+    category = "NetworkSecurityGroupEvent"
+  }
+
+  enabled_log {
+    category = "NetworkSecurityGroupRuleCounter"
+  }
+}
+
+resource "azurerm_monitor_diagnostic_setting" "nsg_application" {
+  provider                   = azurerm.subscription_application
+  name                       = "diag-${module.naming_application.network_security_group}"
+  target_resource_id         = azurerm_network_security_group.application.id
+  log_analytics_workspace_id = module.avm-res-operationalinsights-workspace.resource_id
+
+  enabled_log {
+    category = "NetworkSecurityGroupEvent"
+  }
+
+  enabled_log {
+    category = "NetworkSecurityGroupRuleCounter"
+  }
+}
+
+resource "azurerm_monitor_diagnostic_setting" "nsg_avd" {
+  provider                   = azurerm.subscription_avd
+  name                       = "diag-${module.naming_avd.network_security_group}"
+  target_resource_id         = azurerm_network_security_group.avd.id
+  log_analytics_workspace_id = module.avm-res-operationalinsights-workspace.resource_id
+
+  enabled_log {
+    category = "NetworkSecurityGroupEvent"
+  }
+
+  enabled_log {
+    category = "NetworkSecurityGroupRuleCounter"
+  }
+}
