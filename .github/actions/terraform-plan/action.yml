@@ -65,6 +65,21 @@ runs:
           -backend-config="key=${{ inputs.state-key }}" \
           -reconfigure
 
+    - name: Remove stale azapi VNet state entries
+      shell: bash
+      working-directory: ${{ inputs.working-dir }}
+      env:
+        ARM_USE_OIDC: "true"
+      run: |
+        for addr in \
+          'module.vnet_hub.azapi_resource.vnet' \
+          'module.vnet_application.azapi_resource.vnet' \
+          'module.vnet_avd.azapi_resource.vnet'; do
+          if terraform state list "$addr" 2>/dev/null | grep -q "$addr"; then
+            terraform state rm "$addr"
+          fi
+        done
+
     - name: Download tfvars from Azure Blob
       uses: azure/cli@v2
       with:
