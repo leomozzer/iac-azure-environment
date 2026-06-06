@@ -85,7 +85,7 @@ module "nsg_hub" {
 
   diagnostic_settings = {
     to_log_analytics = {
-      name                  = "diag-${module.naming_hub.network_security_group}"
+      name                  = "diag-setting"
       workspace_resource_id = azurerm_log_analytics_workspace.main.id
       log_groups            = ["allLogs"]
       metric_categories     = []
@@ -107,7 +107,7 @@ module "nsg_application" {
 
   diagnostic_settings = {
     to_log_analytics = {
-      name                  = "diag-${module.naming_application.network_security_group}"
+      name                  = "diag-setting"
       workspace_resource_id = azurerm_log_analytics_workspace.main.id
       log_groups            = ["allLogs"]
       metric_categories     = []
@@ -129,7 +129,7 @@ module "nsg_avd" {
 
   diagnostic_settings = {
     to_log_analytics = {
-      name                  = "diag-${module.naming_avd.network_security_group}"
+      name                  = "diag-setting"
       workspace_resource_id = azurerm_log_analytics_workspace.main.id
       log_groups            = ["allLogs"]
       metric_categories     = []
@@ -168,7 +168,7 @@ module "vnet_hub" {
 
   diagnostic_settings = {
     to_log_analytics = {
-      name                  = "diag-${module.naming_hub.virtual_network}"
+      name                  = "diag-setting"
       workspace_resource_id = azurerm_log_analytics_workspace.main.id
       log_groups            = ["allLogs"]
       metric_categories     = ["AllMetrics"]
@@ -206,7 +206,7 @@ module "vnet_application" {
 
   diagnostic_settings = {
     to_log_analytics = {
-      name                  = "diag-${module.naming_application.virtual_network}"
+      name                  = "diag-setting"
       workspace_resource_id = azurerm_log_analytics_workspace.main.id
       log_groups            = ["allLogs"]
       metric_categories     = ["AllMetrics"]
@@ -244,7 +244,7 @@ module "vnet_avd" {
 
   diagnostic_settings = {
     to_log_analytics = {
-      name                  = "diag-${module.naming_avd.virtual_network}"
+      name                  = "diag-setting"
       workspace_resource_id = azurerm_log_analytics_workspace.main.id
       log_groups            = ["allLogs"]
       metric_categories     = ["AllMetrics"]
@@ -616,7 +616,7 @@ module "firewall_hub" {
 
   diagnostic_settings = {
     to_log_analytics = {
-      name                  = "diag-${module.naming_hub.azure_firewall}"
+      name                  = "diag-setting"
       workspace_resource_id = azurerm_log_analytics_workspace.main.id
       log_groups            = ["allLogs"]
       metric_categories     = ["AllMetrics"]
