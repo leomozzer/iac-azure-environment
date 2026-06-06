@@ -390,104 +390,104 @@ resource "azurerm_network_watcher" "avd" {
 
 # azurerm_network_watcher_flow_log requires network_security_group_id in current provider.
 # Using azapi_resource for VNet-scoped flow logs (version=2) via the Azure REST API directly.
-resource "azapi_resource" "flow_log_hub" {
-  provider  = azapi.subscription_hub
-  type      = "Microsoft.Network/networkWatchers/flowLogs@2023-11-01"
-  name      = module.naming_hub.network_watcher_flow_log
-  parent_id = azurerm_network_watcher.hub.id
-  location  = var.region
+# resource "azapi_resource" "flow_log_hub" {
+#   provider  = azapi.subscription_hub
+#   type      = "Microsoft.Network/networkWatchers/flowLogs@2023-11-01"
+#   name      = module.naming_hub.network_watcher_flow_log
+#   parent_id = azurerm_network_watcher.hub.id
+#   location  = var.region
 
-  body = {
-    properties = {
-      storageId        = azurerm_storage_account.flow_logs_hub.id
-      enabled          = true
-      targetResourceId = module.vnet_hub.resource_id
-      format = {
-        type    = "JSON"
-        version = 2
-      }
-      retentionPolicy = {
-        days    = 90
-        enabled = true
-      }
-      flowAnalyticsConfiguration = {
-        networkWatcherFlowAnalyticsConfiguration = {
-          enabled                  = true
-          workspaceId              = azurerm_log_analytics_workspace.main.workspace_id
-          workspaceRegion          = var.region
-          workspaceResourceId      = azurerm_log_analytics_workspace.main.id
-          trafficAnalyticsInterval = 10
-        }
-      }
-    }
-  }
-}
+#   body = {
+#     properties = {
+#       storageId        = azurerm_storage_account.flow_logs_hub.id
+#       enabled          = true
+#       targetResourceId = module.vnet_hub.resource_id
+#       format = {
+#         type    = "JSON"
+#         version = 2
+#       }
+#       retentionPolicy = {
+#         days    = 90
+#         enabled = true
+#       }
+#       flowAnalyticsConfiguration = {
+#         networkWatcherFlowAnalyticsConfiguration = {
+#           enabled                  = true
+#           workspaceId              = azurerm_log_analytics_workspace.main.workspace_id
+#           workspaceRegion          = var.region
+#           workspaceResourceId      = azurerm_log_analytics_workspace.main.id
+#           trafficAnalyticsInterval = 10
+#         }
+#       }
+#     }
+#   }
+# }
 
-resource "azapi_resource" "flow_log_application" {
-  provider  = azapi.subscription_application
-  type      = "Microsoft.Network/networkWatchers/flowLogs@2023-11-01"
-  name      = module.naming_application.network_watcher_flow_log
-  parent_id = azurerm_network_watcher.application.id
-  location  = var.region
+# resource "azapi_resource" "flow_log_application" {
+#   provider  = azapi.subscription_application
+#   type      = "Microsoft.Network/networkWatchers/flowLogs@2023-11-01"
+#   name      = module.naming_application.network_watcher_flow_log
+#   parent_id = azurerm_network_watcher.application.id
+#   location  = var.region
 
-  body = {
-    properties = {
-      storageId        = azurerm_storage_account.flow_logs_application.id
-      enabled          = true
-      targetResourceId = module.vnet_application.resource_id
-      format = {
-        type    = "JSON"
-        version = 2
-      }
-      retentionPolicy = {
-        days    = 90
-        enabled = true
-      }
-      flowAnalyticsConfiguration = {
-        networkWatcherFlowAnalyticsConfiguration = {
-          enabled                  = true
-          workspaceId              = azurerm_log_analytics_workspace.main.workspace_id
-          workspaceRegion          = var.region
-          workspaceResourceId      = azurerm_log_analytics_workspace.main.id
-          trafficAnalyticsInterval = 10
-        }
-      }
-    }
-  }
-}
+#   body = {
+#     properties = {
+#       storageId        = azurerm_storage_account.flow_logs_application.id
+#       enabled          = true
+#       targetResourceId = module.vnet_application.resource_id
+#       format = {
+#         type    = "JSON"
+#         version = 2
+#       }
+#       retentionPolicy = {
+#         days    = 90
+#         enabled = true
+#       }
+#       flowAnalyticsConfiguration = {
+#         networkWatcherFlowAnalyticsConfiguration = {
+#           enabled                  = true
+#           workspaceId              = azurerm_log_analytics_workspace.main.workspace_id
+#           workspaceRegion          = var.region
+#           workspaceResourceId      = azurerm_log_analytics_workspace.main.id
+#           trafficAnalyticsInterval = 10
+#         }
+#       }
+#     }
+#   }
+# }
 
-resource "azapi_resource" "flow_log_avd" {
-  provider  = azapi.subscription_avd
-  type      = "Microsoft.Network/networkWatchers/flowLogs@2023-11-01"
-  name      = module.naming_avd.network_watcher_flow_log
-  parent_id = azurerm_network_watcher.avd.id
-  location  = var.region
+# resource "azapi_resource" "flow_log_avd" {
+#   provider  = azapi.subscription_avd
+#   type      = "Microsoft.Network/networkWatchers/flowLogs@2023-11-01"
+#   name      = module.naming_avd.network_watcher_flow_log
+#   parent_id = azurerm_network_watcher.avd.id
+#   location  = var.region
 
-  body = {
-    properties = {
-      storageId        = azurerm_storage_account.flow_logs_avd.id
-      enabled          = true
-      targetResourceId = module.vnet_avd.resource_id
-      format = {
-        type    = "JSON"
-        version = 2
-      }
-      retentionPolicy = {
-        days    = 90
-        enabled = true
-      }
-      flowAnalyticsConfiguration = {
-        networkWatcherFlowAnalyticsConfiguration = {
-          enabled                  = true
-          workspaceId              = azurerm_log_analytics_workspace.main.workspace_id
-          workspaceRegion          = var.region
-          workspaceResourceId      = azurerm_log_analytics_workspace.main.id
-          trafficAnalyticsInterval = 10
-        }
-      }
-    }
-  }
-}
+#   body = {
+#     properties = {
+#       storageId        = azurerm_storage_account.flow_logs_avd.id
+#       enabled          = true
+#       targetResourceId = module.vnet_avd.resource_id
+#       format = {
+#         type    = "JSON"
+#         version = 2
+#       }
+#       retentionPolicy = {
+#         days    = 90
+#         enabled = true
+#       }
+#       flowAnalyticsConfiguration = {
+#         networkWatcherFlowAnalyticsConfiguration = {
+#           enabled                  = true
+#           workspaceId              = azurerm_log_analytics_workspace.main.workspace_id
+#           workspaceRegion          = var.region
+#           workspaceResourceId      = azurerm_log_analytics_workspace.main.id
+#           trafficAnalyticsInterval = 10
+#         }
+#       }
+#     }
+#   }
+# }
 
 # ============================================================
 # Route Tables — spoke subnets (always created, routes only when firewall enabled)
