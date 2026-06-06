@@ -138,129 +138,146 @@ module "nsg_avd" {
 }
 
 # Hub VNet — Subscription A
-module "vnet_hub" {
-  source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "0.17.1"
+resource "azurerm_virtual_network" "hub" {
+  provider            = azurerm.subscription_hub
+  name                = module.naming_hub.virtual_network
+  resource_group_name = azurerm_resource_group.hub.name
+  location            = var.region
+  address_space       = ["10.10.0.0/23"]
+}
 
-  providers = {
-    azurerm = azurerm.subscription_hub
-    azapi   = azapi.subscription_hub
+resource "azurerm_subnet" "hub_workload" {
+  provider             = azurerm.subscription_hub
+  name                 = module.naming_hub.subnet
+  resource_group_name  = azurerm_resource_group.hub.name
+  virtual_network_name = azurerm_virtual_network.hub.name
+  address_prefixes     = ["10.10.0.0/24"]
+}
+
+resource "azurerm_subnet" "hub_firewall" {
+  provider             = azurerm.subscription_hub
+  name                 = local.azure_firewall_subnet_name
+  resource_group_name  = azurerm_resource_group.hub.name
+  virtual_network_name = azurerm_virtual_network.hub.name
+  address_prefixes     = ["10.10.1.0/26"]
+}
+
+resource "azurerm_subnet_network_security_group_association" "hub_workload" {
+  provider                  = azurerm.subscription_hub
+  subnet_id                 = azurerm_subnet.hub_workload.id
+  network_security_group_id = module.nsg_hub.resource_id
+}
+
+resource "azurerm_monitor_diagnostic_setting" "vnet_hub" {
+  name                       = "diag-${module.naming_hub.virtual_network}"
+  target_resource_id         = azurerm_virtual_network.hub.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
+
+  enabled_log {
+    category_group = "allLogs"
   }
 
-  name          = module.naming_hub.virtual_network
-  location      = var.region
-  parent_id     = azurerm_resource_group.hub.id
-  address_space = ["10.10.0.0/23"]
-
-  subnets = {
-    workload = {
-      name             = module.naming_hub.subnet
-      address_prefixes = ["10.10.0.0/24"]
-      network_security_group = {
-        id = module.nsg_hub.resource_id
-      }
-    }
-    firewall = {
-      name             = local.azure_firewall_subnet_name
-      address_prefixes = ["10.10.1.0/26"]
-    }
-  }
-
-  diagnostic_settings = {
-    to_log_analytics = {
-      name                  = "diag-${module.naming_hub.virtual_network}"
-      workspace_resource_id = azurerm_log_analytics_workspace.main.id
-      log_groups            = ["allLogs"]
-      metric_categories     = ["AllMetrics"]
-    }
+  metric {
+    category = "AllMetrics"
+    enabled  = true
   }
 }
 
 # Application Spoke VNet — Subscription B
-module "vnet_application" {
-  source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "0.17.1"
+resource "azurerm_virtual_network" "application" {
+  provider            = azurerm.subscription_application
+  name                = module.naming_application.virtual_network
+  resource_group_name = azurerm_resource_group.application.name
+  location            = var.region
+  address_space       = ["10.10.2.0/24"]
+}
 
-  providers = {
-    azurerm = azurerm.subscription_application
-    azapi   = azapi.subscription_application
+resource "azurerm_subnet" "application_workload" {
+  provider             = azurerm.subscription_application
+  name                 = module.naming_application.subnet
+  resource_group_name  = azurerm_resource_group.application.name
+  virtual_network_name = azurerm_virtual_network.application.name
+  address_prefixes     = ["10.10.2.0/24"]
+}
+
+resource "azurerm_subnet_network_security_group_association" "application_workload" {
+  provider                  = azurerm.subscription_application
+  subnet_id                 = azurerm_subnet.application_workload.id
+  network_security_group_id = module.nsg_application.resource_id
+}
+
+resource "azurerm_subnet_route_table_association" "application_workload" {
+  provider       = azurerm.subscription_application
+  subnet_id      = azurerm_subnet.application_workload.id
+  route_table_id = module.rt_application.resource_id
+}
+
+resource "azurerm_monitor_diagnostic_setting" "vnet_application" {
+  name                       = "diag-${module.naming_application.virtual_network}"
+  target_resource_id         = azurerm_virtual_network.application.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
+
+  enabled_log {
+    category_group = "allLogs"
   }
 
-  name          = module.naming_application.virtual_network
-  location      = var.region
-  parent_id     = azurerm_resource_group.application.id
-  address_space = ["10.10.2.0/24"]
-
-  subnets = {
-    workload = {
-      name             = module.naming_application.subnet
-      address_prefixes = ["10.10.2.0/24"]
-      network_security_group = {
-        id = module.nsg_application.resource_id
-      }
-      route_table = {
-        id = module.rt_application.resource_id
-      }
-    }
-  }
-
-  diagnostic_settings = {
-    to_log_analytics = {
-      name                  = "diag-setings"
-      workspace_resource_id = azurerm_log_analytics_workspace.main.id
-      log_groups            = ["allLogs"]
-      metric_categories     = ["AllMetrics"]
-    }
+  metric {
+    category = "AllMetrics"
+    enabled  = true
   }
 }
 
 # AVD Spoke VNet — Subscription C
-module "vnet_avd" {
-  source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "0.17.1"
+resource "azurerm_virtual_network" "avd" {
+  provider            = azurerm.subscription_avd
+  name                = module.naming_avd.virtual_network
+  resource_group_name = azurerm_resource_group.avd.name
+  location            = var.region
+  address_space       = ["10.10.5.0/25"]
+}
 
-  providers = {
-    azurerm = azurerm.subscription_avd
-    azapi   = azapi.subscription_avd
+resource "azurerm_subnet" "avd_workload" {
+  provider             = azurerm.subscription_avd
+  name                 = module.naming_avd.subnet
+  resource_group_name  = azurerm_resource_group.avd.name
+  virtual_network_name = azurerm_virtual_network.avd.name
+  address_prefixes     = ["10.10.5.0/25"]
+}
+
+resource "azurerm_subnet_network_security_group_association" "avd_workload" {
+  provider                  = azurerm.subscription_avd
+  subnet_id                 = azurerm_subnet.avd_workload.id
+  network_security_group_id = module.nsg_avd.resource_id
+}
+
+resource "azurerm_subnet_route_table_association" "avd_workload" {
+  provider       = azurerm.subscription_avd
+  subnet_id      = azurerm_subnet.avd_workload.id
+  route_table_id = module.rt_avd.resource_id
+}
+
+resource "azurerm_monitor_diagnostic_setting" "vnet_avd" {
+  name                       = "diag-${module.naming_avd.virtual_network}"
+  target_resource_id         = azurerm_virtual_network.avd.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
+
+  enabled_log {
+    category_group = "allLogs"
   }
 
-  name          = module.naming_avd.virtual_network
-  location      = var.region
-  parent_id     = azurerm_resource_group.avd.id
-  address_space = ["10.10.5.0/25"]
-
-  subnets = {
-    workload = {
-      name             = module.naming_avd.subnet
-      address_prefixes = ["10.10.5.0/25"]
-      network_security_group = {
-        id = module.nsg_avd.resource_id
-      }
-      route_table = {
-        id = module.rt_avd.resource_id
-      }
-    }
-  }
-
-  diagnostic_settings = {
-    to_log_analytics = {
-      name                  = "diag-settings"
-      workspace_resource_id = azurerm_log_analytics_workspace.main.id
-      log_groups            = ["allLogs"]
-      metric_categories     = ["AllMetrics"]
-    }
+  metric {
+    category = "AllMetrics"
+    enabled  = true
   }
 }
 
 # VNet Peerings — cross-subscription, bidirectional
-# Name format: peer-<source-vnet-name>-to-<dest-purpose-spoke-region-instance>
-
 resource "azurerm_virtual_network_peering" "hub_to_application" {
   provider                  = azurerm.subscription_hub
   name                      = "peer-${local.hub_vnet_name}-to-${local.app_spoke_base}"
   resource_group_name       = azurerm_resource_group.hub.name
-  virtual_network_name      = module.vnet_hub.name
-  remote_virtual_network_id = module.vnet_application.resource_id
+  virtual_network_name      = azurerm_virtual_network.hub.name
+  remote_virtual_network_id = azurerm_virtual_network.application.id
   allow_forwarded_traffic   = true
   allow_gateway_transit     = false
 }
@@ -269,8 +286,8 @@ resource "azurerm_virtual_network_peering" "application_to_hub" {
   provider                  = azurerm.subscription_application
   name                      = "peer-${local.app_spoke_base}-to-${local.hub_vnet_name}"
   resource_group_name       = azurerm_resource_group.application.name
-  virtual_network_name      = module.vnet_application.name
-  remote_virtual_network_id = module.vnet_hub.resource_id
+  virtual_network_name      = azurerm_virtual_network.application.name
+  remote_virtual_network_id = azurerm_virtual_network.hub.id
   allow_forwarded_traffic   = true
   use_remote_gateways       = false
 }
@@ -279,8 +296,8 @@ resource "azurerm_virtual_network_peering" "hub_to_avd" {
   provider                  = azurerm.subscription_hub
   name                      = "peer-${local.hub_vnet_name}-to-${local.avd_spoke_base}"
   resource_group_name       = azurerm_resource_group.hub.name
-  virtual_network_name      = module.vnet_hub.name
-  remote_virtual_network_id = module.vnet_avd.resource_id
+  virtual_network_name      = azurerm_virtual_network.hub.name
+  remote_virtual_network_id = azurerm_virtual_network.avd.id
   allow_forwarded_traffic   = true
   allow_gateway_transit     = false
 }
@@ -289,8 +306,8 @@ resource "azurerm_virtual_network_peering" "avd_to_hub" {
   provider                  = azurerm.subscription_avd
   name                      = "peer-${local.avd_spoke_base}-to-${local.hub_vnet_name}"
   resource_group_name       = azurerm_resource_group.avd.name
-  virtual_network_name      = module.vnet_avd.name
-  remote_virtual_network_id = module.vnet_hub.resource_id
+  virtual_network_name      = azurerm_virtual_network.avd.name
+  remote_virtual_network_id = azurerm_virtual_network.hub.id
   allow_forwarded_traffic   = true
   use_remote_gateways       = false
 }
@@ -403,7 +420,7 @@ resource "azapi_resource" "flow_log_hub" {
     properties = {
       storageId        = azurerm_storage_account.flow_logs_hub.id
       enabled          = true
-      targetResourceId = module.vnet_hub.resource_id
+      targetResourceId = azurerm_virtual_network.hub.id
       format = {
         type    = "JSON"
         version = 2
@@ -436,7 +453,7 @@ resource "azapi_resource" "flow_log_application" {
     properties = {
       storageId        = azurerm_storage_account.flow_logs_application.id
       enabled          = true
-      targetResourceId = module.vnet_application.resource_id
+      targetResourceId = azurerm_virtual_network.application.id
       format = {
         type    = "JSON"
         version = 2
@@ -469,7 +486,7 @@ resource "azapi_resource" "flow_log_avd" {
     properties = {
       storageId        = azurerm_storage_account.flow_logs_avd.id
       enabled          = true
-      targetResourceId = module.vnet_avd.resource_id
+      targetResourceId = azurerm_virtual_network.avd.id
       format = {
         type    = "JSON"
         version = 2
@@ -611,7 +628,7 @@ module "firewall_hub" {
   ip_configurations = {
     ipconfig = {
       name                 = "ipconfig-${module.naming_hub.azure_firewall}"
-      subnet_id            = module.vnet_hub.subnets["firewall"].resource_id
+      subnet_id            = azurerm_subnet.hub_firewall.id
       public_ip_address_id = module.pip_firewall[0].resource_id
     }
   }
@@ -653,7 +670,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "hub" {
   name                  = "link-hub-${each.key}"
   resource_group_name   = azurerm_resource_group.hub.name
   private_dns_zone_name = azurerm_private_dns_zone.zones[each.key].name
-  virtual_network_id    = module.vnet_hub.resource_id
+  virtual_network_id    = azurerm_virtual_network.hub.id
   registration_enabled  = false
 }
 
@@ -663,7 +680,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "application" {
   name                  = "link-application-${each.key}"
   resource_group_name   = azurerm_resource_group.hub.name
   private_dns_zone_name = azurerm_private_dns_zone.zones[each.key].name
-  virtual_network_id    = module.vnet_application.resource_id
+  virtual_network_id    = azurerm_virtual_network.application.id
   registration_enabled  = false
 }
 
@@ -673,6 +690,6 @@ resource "azurerm_private_dns_zone_virtual_network_link" "avd" {
   name                  = "link-avd-${each.key}"
   resource_group_name   = azurerm_resource_group.hub.name
   private_dns_zone_name = azurerm_private_dns_zone.zones[each.key].name
-  virtual_network_id    = module.vnet_avd.resource_id
+  virtual_network_id    = azurerm_virtual_network.avd.id
   registration_enabled  = false
 }
