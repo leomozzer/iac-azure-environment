@@ -49,3 +49,19 @@ output "network_watcher" {
 output "network_watcher_flow_log" {
   value = "flw-${local.base}"
 }
+
+output "azure_firewall" {
+  value = "afw-${local.base}"
+}
+
+output "firewall_policy" {
+  value = "afwp-${local.base}"
+}
+
+output "public_ip" {
+  value = "pip-${local.base}"
+}
+
+output "route_table" {
+  value = "rt-${local.base}"
+}

@@ -30,3 +30,9 @@ variable "avd_subscription_id" {
   type        = string
   description = "Azure subscription ID for the AVD spoke (Subscription C)"
 }
+
+variable "enable_firewall" {
+  type        = bool
+  description = "Deploy Azure Firewall Standard in the hub. Set false to keep VNets only (no firewall cost)."
+  default     = false
+}

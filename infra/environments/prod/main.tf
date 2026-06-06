@@ -44,10 +44,11 @@ module "naming_avd" {
 }
 
 locals {
-  hub_vnet_name  = module.naming_hub.virtual_network
-  hub_base       = trimprefix(local.hub_vnet_name, "vnet-hub-")
-  app_spoke_base = trimprefix(module.naming_application.virtual_network, "vnet-")
-  avd_spoke_base = trimprefix(module.naming_avd.virtual_network, "vnet-")
+  hub_vnet_name              = module.naming_hub.virtual_network
+  hub_base                   = trimprefix(local.hub_vnet_name, "vnet-hub-")
+  app_spoke_base             = trimprefix(module.naming_application.virtual_network, "vnet-")
+  avd_spoke_base             = trimprefix(module.naming_avd.virtual_network, "vnet-")
+  azure_firewall_subnet_name = "AzureFirewallSubnet"
 }
 
 # Resource Groups
@@ -159,6 +160,10 @@ module "vnet_hub" {
         id = module.nsg_hub.resource_id
       }
     }
+    firewall = {
+      name             = local.azure_firewall_subnet_name
+      address_prefixes = ["10.10.1.0/26"]
+    }
   }
 
   diagnostic_settings = {
@@ -192,6 +197,9 @@ module "vnet_application" {
       address_prefixes = ["10.10.2.0/24"]
       network_security_group = {
         id = module.nsg_application.resource_id
+      }
+      route_table = {
+        id = module.rt_application.resource_id
       }
     }
   }
@@ -227,6 +235,9 @@ module "vnet_avd" {
       address_prefixes = ["10.10.5.0/25"]
       network_security_group = {
         id = module.nsg_avd.resource_id
+      }
+      route_table = {
+        id = module.rt_avd.resource_id
       }
     }
   }
@@ -485,3 +496,188 @@ resource "azapi_resource" "flow_log_avd" {
   }
 }
 
+# ============================================================
+# Route Tables — spoke subnets (always created, routes only when firewall enabled)
+# ============================================================
+
+module "rt_application" {
+  source  = "Azure/avm-res-network-routetable/azurerm"
+  version = "0.5.0"
+
+  providers = {
+    azurerm = azurerm.subscription_application
+  }
+
+  name                = module.naming_application.route_table
+  location            = var.region
+  resource_group_name = azurerm_resource_group.application.name
+}
+
+module "rt_avd" {
+  source  = "Azure/avm-res-network-routetable/azurerm"
+  version = "0.5.0"
+
+  providers = {
+    azurerm = azurerm.subscription_avd
+  }
+
+  name                = module.naming_avd.route_table
+  location            = var.region
+  resource_group_name = azurerm_resource_group.avd.name
+}
+
+resource "azurerm_route" "application_default" {
+  count                  = var.enable_firewall ? 1 : 0
+  provider               = azurerm.subscription_application
+  name                   = "default-to-firewall"
+  resource_group_name    = azurerm_resource_group.application.name
+  route_table_name       = module.rt_application.resource.name
+  address_prefix         = "0.0.0.0/0"
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = module.firewall_hub[0].resource.ip_configuration[0].private_ip_address
+}
+
+resource "azurerm_route" "avd_default" {
+  count                  = var.enable_firewall ? 1 : 0
+  provider               = azurerm.subscription_avd
+  name                   = "default-to-firewall"
+  resource_group_name    = azurerm_resource_group.avd.name
+  route_table_name       = module.rt_avd.resource.name
+  address_prefix         = "0.0.0.0/0"
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = module.firewall_hub[0].resource.ip_configuration[0].private_ip_address
+}
+
+# ============================================================
+# Azure Firewall Standard — hub (conditional on var.enable_firewall)
+# ============================================================
+
+module "pip_firewall" {
+  count   = var.enable_firewall ? 1 : 0
+  source  = "Azure/avm-res-network-publicipaddress/azurerm"
+  version = "0.2.1"
+
+  providers = {
+    azurerm = azurerm.subscription_hub
+    azapi   = azapi.subscription_hub
+  }
+
+  name                = module.naming_hub.public_ip
+  resource_group_name = azurerm_resource_group.hub.name
+  location            = var.region
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  zones               = []
+}
+
+module "firewall_policy_hub" {
+  count   = var.enable_firewall ? 1 : 0
+  source  = "Azure/avm-res-network-firewallpolicy/azurerm"
+  version = "0.3.4"
+
+  providers = {
+    azurerm = azurerm.subscription_hub
+    azapi   = azapi.subscription_hub
+  }
+
+  name                = module.naming_hub.firewall_policy
+  resource_group_name = azurerm_resource_group.hub.name
+  location            = var.region
+  firewall_policy_sku = "Standard"
+
+  firewall_policy_dns = {
+    proxy_enabled = true
+  }
+
+  firewall_policy_insights = {
+    enabled                            = true
+    default_log_analytics_workspace_id = data.azurerm_log_analytics_workspace.main.id
+    retention_in_days                  = 90
+  }
+}
+
+module "firewall_hub" {
+  count   = var.enable_firewall ? 1 : 0
+  source  = "Azure/avm-res-network-azurefirewall/azurerm"
+  version = "0.4.0"
+
+  providers = {
+    azurerm = azurerm.subscription_hub
+  }
+
+  name                = module.naming_hub.azure_firewall
+  resource_group_name = azurerm_resource_group.hub.name
+  location            = var.region
+  firewall_sku_name   = "AZFW_VNet"
+  firewall_sku_tier   = "Standard"
+  firewall_policy_id  = module.firewall_policy_hub[0].resource_id
+  firewall_zones      = []
+
+  ip_configurations = {
+    ipconfig = {
+      name                 = "ipconfig-${module.naming_hub.azure_firewall}"
+      subnet_id            = module.vnet_hub.subnets["firewall"].resource_id
+      public_ip_address_id = module.pip_firewall[0].resource_id
+    }
+  }
+
+  diagnostic_settings = {
+    to_log_analytics = {
+      name                  = "diag-${module.naming_hub.azure_firewall}"
+      workspace_resource_id = data.azurerm_log_analytics_workspace.main.id
+      log_groups            = ["allLogs"]
+      metric_categories     = ["AllMetrics"]
+    }
+  }
+}
+
+# ============================================================
+# Private DNS Zones — hub subscription, linked to all VNets
+# ============================================================
+
+locals {
+  private_dns_zones = {
+    blob     = "privatelink.blob.core.windows.net"
+    file     = "privatelink.file.core.windows.net"
+    keyvault = "privatelink.vaultcore.azure.net"
+    acr      = "privatelink.azurecr.io"
+    websites = "privatelink.azurewebsites.net"
+  }
+}
+
+resource "azurerm_private_dns_zone" "zones" {
+  provider            = azurerm.subscription_hub
+  for_each            = local.private_dns_zones
+  name                = each.value
+  resource_group_name = azurerm_resource_group.hub.name
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "hub" {
+  provider              = azurerm.subscription_hub
+  for_each              = local.private_dns_zones
+  name                  = "link-hub-${each.key}"
+  resource_group_name   = azurerm_resource_group.hub.name
+  private_dns_zone_name = azurerm_private_dns_zone.zones[each.key].name
+  virtual_network_id    = module.vnet_hub.resource_id
+  registration_enabled  = false
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "application" {
+  provider              = azurerm.subscription_hub
+  for_each              = local.private_dns_zones
+  name                  = "link-application-${each.key}"
+  resource_group_name   = azurerm_resource_group.hub.name
+  private_dns_zone_name = azurerm_private_dns_zone.zones[each.key].name
+  virtual_network_id    = module.vnet_application.resource_id
+  registration_enabled  = false
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "avd" {
+  provider              = azurerm.subscription_hub
+  for_each              = local.private_dns_zones
+  name                  = "link-avd-${each.key}"
+  resource_group_name   = azurerm_resource_group.hub.name
+  private_dns_zone_name = azurerm_private_dns_zone.zones[each.key].name
+  virtual_network_id    = module.vnet_avd.resource_id
+  registration_enabled  = false
+}
