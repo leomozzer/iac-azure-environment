@@ -20,7 +20,7 @@ inputs:
   terraform-version:
     description: "Must match the version used in terraform-plan — plan files are version-locked"
     required: false
-    default: "1.9.0"
+    default: "1.15.5"
 
 runs:
   using: composite
