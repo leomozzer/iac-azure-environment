@@ -10,12 +10,12 @@ resource "azurerm_resource_group" "operationalinsights" {
   location = var.region
 }
 
-module "avm-res-operationalinsights-workspace" {
-  source              = "Azure/avm-res-operationalinsights-workspace/azurerm"
-  version             = "0.5.1"
+resource "azurerm_log_analytics_workspace" "main" {
+  name                = module.operationalinsights.log_analytics_workspace
   resource_group_name = azurerm_resource_group.operationalinsights.name
   location            = var.region
-  name                = module.operationalinsights.log_analytics_workspace
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
 }
 
 # ============================================================
@@ -86,7 +86,7 @@ module "nsg_hub" {
   diagnostic_settings = {
     to_log_analytics = {
       name                  = "diag-${module.naming_hub.network_security_group}"
-      workspace_resource_id = module.avm-res-operationalinsights-workspace.resource_id
+      workspace_resource_id = azurerm_log_analytics_workspace.main.id
       log_groups            = ["allLogs"]
       metric_categories     = []
     }
@@ -108,7 +108,7 @@ module "nsg_application" {
   diagnostic_settings = {
     to_log_analytics = {
       name                  = "diag-${module.naming_application.network_security_group}"
-      workspace_resource_id = module.avm-res-operationalinsights-workspace.resource_id
+      workspace_resource_id = azurerm_log_analytics_workspace.main.id
       log_groups            = ["allLogs"]
       metric_categories     = []
     }
@@ -130,7 +130,7 @@ module "nsg_avd" {
   diagnostic_settings = {
     to_log_analytics = {
       name                  = "diag-${module.naming_avd.network_security_group}"
-      workspace_resource_id = module.avm-res-operationalinsights-workspace.resource_id
+      workspace_resource_id = azurerm_log_analytics_workspace.main.id
       log_groups            = ["allLogs"]
       metric_categories     = []
     }
@@ -169,7 +169,7 @@ module "vnet_hub" {
   diagnostic_settings = {
     to_log_analytics = {
       name                  = "diag-${module.naming_hub.virtual_network}"
-      workspace_resource_id = module.avm-res-operationalinsights-workspace.resource_id
+      workspace_resource_id = azurerm_log_analytics_workspace.main.id
       log_groups            = ["allLogs"]
       metric_categories     = ["AllMetrics"]
     }
@@ -207,7 +207,7 @@ module "vnet_application" {
   diagnostic_settings = {
     to_log_analytics = {
       name                  = "diag-setings"
-      workspace_resource_id = module.avm-res-operationalinsights-workspace.resource_id
+      workspace_resource_id = azurerm_log_analytics_workspace.main.id
       log_groups            = ["allLogs"]
       metric_categories     = ["AllMetrics"]
     }
@@ -245,7 +245,7 @@ module "vnet_avd" {
   diagnostic_settings = {
     to_log_analytics = {
       name                  = "diag-settings"
-      workspace_resource_id = module.avm-res-operationalinsights-workspace.resource_id
+      workspace_resource_id = azurerm_log_analytics_workspace.main.id
       log_groups            = ["allLogs"]
       metric_categories     = ["AllMetrics"]
     }
@@ -415,9 +415,9 @@ resource "azapi_resource" "flow_log_hub" {
       flowAnalyticsConfiguration = {
         networkWatcherFlowAnalyticsConfiguration = {
           enabled                  = true
-          workspaceId              = module.avm-res-operationalinsights-workspace.resource.workspace_id
+          workspaceId              = azurerm_log_analytics_workspace.main.workspace_id
           workspaceRegion          = var.region
-          workspaceResourceId      = module.avm-res-operationalinsights-workspace.resource_id
+          workspaceResourceId      = azurerm_log_analytics_workspace.main.id
           trafficAnalyticsInterval = 10
         }
       }
@@ -448,9 +448,9 @@ resource "azapi_resource" "flow_log_application" {
       flowAnalyticsConfiguration = {
         networkWatcherFlowAnalyticsConfiguration = {
           enabled                  = true
-          workspaceId              = module.avm-res-operationalinsights-workspace.resource.workspace_id
+          workspaceId              = azurerm_log_analytics_workspace.main.workspace_id
           workspaceRegion          = var.region
-          workspaceResourceId      = module.avm-res-operationalinsights-workspace.resource_id
+          workspaceResourceId      = azurerm_log_analytics_workspace.main.id
           trafficAnalyticsInterval = 10
         }
       }
@@ -481,9 +481,9 @@ resource "azapi_resource" "flow_log_avd" {
       flowAnalyticsConfiguration = {
         networkWatcherFlowAnalyticsConfiguration = {
           enabled                  = true
-          workspaceId              = module.avm-res-operationalinsights-workspace.resource.workspace_id
+          workspaceId              = azurerm_log_analytics_workspace.main.workspace_id
           workspaceRegion          = var.region
-          workspaceResourceId      = module.avm-res-operationalinsights-workspace.resource_id
+          workspaceResourceId      = azurerm_log_analytics_workspace.main.id
           trafficAnalyticsInterval = 10
         }
       }
@@ -586,7 +586,7 @@ module "firewall_policy_hub" {
 
   firewall_policy_insights = {
     enabled                            = true
-    default_log_analytics_workspace_id = module.avm-res-operationalinsights-workspace.resource_id
+    default_log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
     retention_in_days                  = 90
   }
 }
@@ -619,7 +619,7 @@ module "firewall_hub" {
   diagnostic_settings = {
     to_log_analytics = {
       name                  = "diag-${module.naming_hub.azure_firewall}"
-      workspace_resource_id = module.avm-res-operationalinsights-workspace.resource_id
+      workspace_resource_id = azurerm_log_analytics_workspace.main.id
       log_groups            = ["allLogs"]
       metric_categories     = ["AllMetrics"]
     }
