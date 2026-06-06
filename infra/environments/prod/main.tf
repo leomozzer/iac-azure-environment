@@ -153,7 +153,7 @@ module "vnet_application" {
 
   diagnostic_settings = {
     to_log_analytics = {
-      name                  = "diag-${module.naming_application.virtual_network}"
+      name                  = "diag-setings"
       workspace_resource_id = data.azurerm_log_analytics_workspace.main.id
       log_groups            = ["allLogs"]
       metric_categories     = ["AllMetrics"]
@@ -188,7 +188,7 @@ module "vnet_avd" {
 
   diagnostic_settings = {
     to_log_analytics = {
-      name                  = "diag-${module.naming_avd.virtual_network}"
+      name                  = "diag-settings"
       workspace_resource_id = data.azurerm_log_analytics_workspace.main.id
       log_groups            = ["allLogs"]
       metric_categories     = ["AllMetrics"]
