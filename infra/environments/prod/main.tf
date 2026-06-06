@@ -69,26 +69,71 @@ resource "azurerm_resource_group" "avd" {
   location = var.region
 }
 
-# Network Security Groups (one per VNet, associated with workload subnets)
-resource "azurerm_network_security_group" "hub" {
-  provider            = azurerm.subscription_hub
+# Network Security Groups — AVM module (one per VNet, associated with workload subnets)
+module "nsg_hub" {
+  source  = "Azure/avm-res-network-networksecuritygroup/azurerm"
+  version = "0.5.1"
+
+  providers = {
+    azurerm = azurerm.subscription_hub
+  }
+
   name                = module.naming_hub.network_security_group
   location            = var.region
   resource_group_name = azurerm_resource_group.hub.name
+
+  diagnostic_settings = {
+    to_log_analytics = {
+      name                  = "diag-${module.naming_hub.network_security_group}"
+      workspace_resource_id = data.azurerm_log_analytics_workspace.main.id
+      log_groups            = ["allLogs"]
+      metric_categories     = []
+    }
+  }
 }
 
-resource "azurerm_network_security_group" "application" {
-  provider            = azurerm.subscription_application
+module "nsg_application" {
+  source  = "Azure/avm-res-network-networksecuritygroup/azurerm"
+  version = "0.5.1"
+
+  providers = {
+    azurerm = azurerm.subscription_application
+  }
+
   name                = module.naming_application.network_security_group
   location            = var.region
   resource_group_name = azurerm_resource_group.application.name
+
+  diagnostic_settings = {
+    to_log_analytics = {
+      name                  = "diag-${module.naming_application.network_security_group}"
+      workspace_resource_id = data.azurerm_log_analytics_workspace.main.id
+      log_groups            = ["allLogs"]
+      metric_categories     = []
+    }
+  }
 }
 
-resource "azurerm_network_security_group" "avd" {
-  provider            = azurerm.subscription_avd
+module "nsg_avd" {
+  source  = "Azure/avm-res-network-networksecuritygroup/azurerm"
+  version = "0.5.1"
+
+  providers = {
+    azurerm = azurerm.subscription_avd
+  }
+
   name                = module.naming_avd.network_security_group
   location            = var.region
   resource_group_name = azurerm_resource_group.avd.name
+
+  diagnostic_settings = {
+    to_log_analytics = {
+      name                  = "diag-${module.naming_avd.network_security_group}"
+      workspace_resource_id = data.azurerm_log_analytics_workspace.main.id
+      log_groups            = ["allLogs"]
+      metric_categories     = []
+    }
+  }
 }
 
 # Hub VNet — Subscription A
@@ -111,7 +156,7 @@ module "vnet_hub" {
       name             = module.naming_hub.subnet
       address_prefixes = ["10.10.0.0/24"]
       network_security_group = {
-        id = azurerm_network_security_group.hub.id
+        id = module.nsg_hub.resource_id
       }
     }
   }
@@ -146,7 +191,7 @@ module "vnet_application" {
       name             = module.naming_application.subnet
       address_prefixes = ["10.10.2.0/24"]
       network_security_group = {
-        id = azurerm_network_security_group.application.id
+        id = module.nsg_application.resource_id
       }
     }
   }
@@ -181,7 +226,7 @@ module "vnet_avd" {
       name             = module.naming_avd.subnet
       address_prefixes = ["10.10.5.0/25"]
       network_security_group = {
-        id = azurerm_network_security_group.avd.id
+        id = module.nsg_avd.resource_id
       }
     }
   }
@@ -440,52 +485,3 @@ resource "azapi_resource" "flow_log_avd" {
   }
 }
 
-# ============================================================
-# Diagnostic Settings — NSGs to Log Analytics
-# VNet diagnostics are configured via the AVM module's diagnostic_settings input.
-# ============================================================
-
-resource "azurerm_monitor_diagnostic_setting" "nsg_hub" {
-  provider                   = azurerm.subscription_hub
-  name                       = "diag-${module.naming_hub.network_security_group}"
-  target_resource_id         = azurerm_network_security_group.hub.id
-  log_analytics_workspace_id = data.azurerm_log_analytics_workspace.main.id
-
-  enabled_log {
-    category = "NetworkSecurityGroupEvent"
-  }
-
-  enabled_log {
-    category = "NetworkSecurityGroupRuleCounter"
-  }
-}
-
-resource "azurerm_monitor_diagnostic_setting" "nsg_application" {
-  provider                   = azurerm.subscription_application
-  name                       = "diag-${module.naming_application.network_security_group}"
-  target_resource_id         = azurerm_network_security_group.application.id
-  log_analytics_workspace_id = data.azurerm_log_analytics_workspace.main.id
-
-  enabled_log {
-    category = "NetworkSecurityGroupEvent"
-  }
-
-  enabled_log {
-    category = "NetworkSecurityGroupRuleCounter"
-  }
-}
-
-resource "azurerm_monitor_diagnostic_setting" "nsg_avd" {
-  provider                   = azurerm.subscription_avd
-  name                       = "diag-${module.naming_avd.network_security_group}"
-  target_resource_id         = azurerm_network_security_group.avd.id
-  log_analytics_workspace_id = data.azurerm_log_analytics_workspace.main.id
-
-  enabled_log {
-    category = "NetworkSecurityGroupEvent"
-  }
-
-  enabled_log {
-    category = "NetworkSecurityGroupRuleCounter"
-  }
-}
