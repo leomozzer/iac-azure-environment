@@ -22,51 +22,65 @@ resource "azurerm_log_analytics_workspace" "main" {
 # Hub-and-Spoke Landing Zone
 # ============================================================
 
-module "naming_hub" {
+module "naming_vnet_hub_eastus" {
   source   = "../../modules/naming"
   purpose  = "hub"
   region   = var.region
-  instance = var.instance
+  instance = "001"
 }
 
-module "naming_application" {
+module "naming_vnet_hub_westeurope" {
+  source   = "../../modules/naming"
+  purpose  = "hub"
+  region   = "westeurope"
+  instance = "001"
+}
+
+module "naming_vnet_application_eastus_001" {
   source   = "../../modules/naming"
   purpose  = "application-spoke"
   region   = var.region
-  instance = var.instance
+  instance = "001"
 }
 
-module "naming_avd" {
+module "naming_vnet_avd_eastus_001" {
   source   = "../../modules/naming"
   purpose  = "avd-spoke"
   region   = var.region
-  instance = var.instance
+  instance = "001"
 }
 
+# Locals for East US Resources — used for naming and other properties that depend on multiple modules/resources. #
 locals {
-  hub_vnet_name              = module.naming_hub.virtual_network
+  hub_vnet_name              = module.naming_vnet_hub_eastus.virtual_network
   hub_base                   = trimprefix(local.hub_vnet_name, "vnet-hub-")
-  app_spoke_base             = trimprefix(module.naming_application.virtual_network, "vnet-")
-  avd_spoke_base             = trimprefix(module.naming_avd.virtual_network, "vnet-")
+  app_spoke_base             = trimprefix(module.naming_vnet_application_eastus_001.virtual_network, "vnet-")
+  avd_spoke_base             = trimprefix(module.naming_vnet_avd_eastus_001.virtual_network, "vnet-")
   azure_firewall_subnet_name = "AzureFirewallSubnet"
 }
 
 # Resource Groups
-resource "azurerm_resource_group" "hub" {
+resource "azurerm_resource_group" "vnet_hub_eastus" {
   provider = azurerm.subscription_hub
-  name     = module.naming_hub.resource_group
+  name     = module.naming_vnet_hub_eastus.resource_group
   location = var.region
 }
 
-resource "azurerm_resource_group" "application" {
+resource "azurerm_resource_group" "vnet_hub_westeurope" {
+  provider = azurerm.subscription_hub
+  name     = module.naming_vnet_hub_westeurope.resource_group
+  location = "westeurope"
+}
+
+resource "azurerm_resource_group" "vnet_application_eastus_001" {
   provider = azurerm.subscription_application
-  name     = module.naming_application.resource_group
+  name     = module.naming_vnet_application_eastus_001.resource_group
   location = var.region
 }
 
-resource "azurerm_resource_group" "avd" {
+resource "azurerm_resource_group" "vnet_avd_eastus_001" {
   provider = azurerm.subscription_avd
-  name     = module.naming_avd.resource_group
+  name     = module.naming_vnet_avd_eastus_001.resource_group
   location = var.region
 }
 
@@ -79,9 +93,9 @@ module "nsg_hub" {
     azurerm = azurerm.subscription_hub
   }
 
-  name                = module.naming_hub.network_security_group
+  name                = module.naming_vnet_hub_eastus.network_security_group
   location            = var.region
-  resource_group_name = azurerm_resource_group.hub.name
+  resource_group_name = azurerm_resource_group.vnet_hub_eastus.name
 
   diagnostic_settings = {
     to_log_analytics = {
@@ -101,9 +115,9 @@ module "nsg_application" {
     azurerm = azurerm.subscription_application
   }
 
-  name                = module.naming_application.network_security_group
+  name                = module.naming_vnet_application_eastus_001.network_security_group
   location            = var.region
-  resource_group_name = azurerm_resource_group.application.name
+  resource_group_name = azurerm_resource_group.vnet_application_eastus_001.name
 
   diagnostic_settings = {
     to_log_analytics = {
@@ -123,9 +137,31 @@ module "nsg_avd" {
     azurerm = azurerm.subscription_avd
   }
 
-  name                = module.naming_avd.network_security_group
+  name                = module.naming_vnet_avd_eastus_001.network_security_group
   location            = var.region
-  resource_group_name = azurerm_resource_group.avd.name
+  resource_group_name = azurerm_resource_group.vnet_avd_eastus_001.name
+
+  diagnostic_settings = {
+    to_log_analytics = {
+      name                  = "diag-setting"
+      workspace_resource_id = azurerm_log_analytics_workspace.main.id
+      log_groups            = ["allLogs"]
+      metric_categories     = []
+    }
+  }
+}
+
+module "nsg_hub_westeurope" {
+  source  = "Azure/avm-res-network-networksecuritygroup/azurerm"
+  version = "0.5.1"
+
+  providers = {
+    azurerm = azurerm.subscription_hub
+  }
+
+  name                = module.naming_vnet_hub_westeurope.network_security_group
+  location            = "westeurope"
+  resource_group_name = azurerm_resource_group.vnet_hub_westeurope.name
 
   diagnostic_settings = {
     to_log_analytics = {
@@ -147,14 +183,14 @@ module "vnet_hub" {
     azapi   = azapi.subscription_hub
   }
 
-  name          = module.naming_hub.virtual_network
+  name          = module.naming_vnet_hub_eastus.virtual_network
   location      = var.region
-  parent_id     = azurerm_resource_group.hub.id
+  parent_id     = azurerm_resource_group.vnet_hub_eastus.id
   address_space = ["10.10.0.0/23"]
 
   subnets = {
     workload = {
-      name             = module.naming_hub.subnet
+      name             = module.naming_vnet_hub_eastus.subnet
       address_prefixes = ["10.10.0.0/24"]
       network_security_group = {
         id = module.nsg_hub.resource_id
@@ -163,6 +199,49 @@ module "vnet_hub" {
     firewall = {
       name             = local.azure_firewall_subnet_name
       address_prefixes = ["10.10.1.0/26"]
+    }
+    bastion = {
+      name             = "AzureBastionSubnet"
+      address_prefixes = ["10.10.1.64/26"]
+    }
+  }
+
+  diagnostic_settings = {
+    to_log_analytics = {
+      name                  = "diag-setting"
+      workspace_resource_id = azurerm_log_analytics_workspace.main.id
+      log_groups            = ["allLogs"]
+      metric_categories     = ["AllMetrics"]
+    }
+  }
+}
+
+# Hub VNet — West Europe
+module "vnet_hub_westeurope" {
+  source  = "Azure/avm-res-network-virtualnetwork/azurerm"
+  version = "0.17.1"
+
+  providers = {
+    azurerm = azurerm.subscription_hub
+    azapi   = azapi.subscription_hub
+  }
+
+  name          = module.naming_vnet_hub_westeurope.virtual_network
+  location      = "westeurope"
+  parent_id     = azurerm_resource_group.vnet_hub_westeurope.id
+  address_space = ["136.0.0.0/16"]
+
+  subnets = {
+    workload = {
+      name             = module.naming_vnet_hub_westeurope.subnet
+      address_prefixes = ["136.0.0.0/23"]
+      network_security_group = {
+        id = module.nsg_hub_westeurope.resource_id
+      }
+    }
+    firewall = {
+      name             = local.azure_firewall_subnet_name
+      address_prefixes = ["136.0.2.0/26"]
     }
   }
 
@@ -186,14 +265,14 @@ module "vnet_application" {
     azapi   = azapi.subscription_application
   }
 
-  name          = module.naming_application.virtual_network
+  name          = module.naming_vnet_application_eastus_001.virtual_network
   location      = var.region
-  parent_id     = azurerm_resource_group.application.id
+  parent_id     = azurerm_resource_group.vnet_application_eastus_001.id
   address_space = ["10.10.2.0/24"]
 
   subnets = {
     workload = {
-      name             = module.naming_application.subnet
+      name             = module.naming_vnet_application_eastus_001.subnet
       address_prefixes = ["10.10.2.0/24"]
       network_security_group = {
         id = module.nsg_application.resource_id
@@ -224,14 +303,14 @@ module "vnet_avd" {
     azapi   = azapi.subscription_avd
   }
 
-  name          = module.naming_avd.virtual_network
+  name          = module.naming_vnet_avd_eastus_001.virtual_network
   location      = var.region
-  parent_id     = azurerm_resource_group.avd.id
+  parent_id     = azurerm_resource_group.vnet_avd_eastus_001.id
   address_space = ["10.10.5.0/25"]
 
   subnets = {
     workload = {
-      name             = module.naming_avd.subnet
+      name             = module.naming_vnet_avd_eastus_001.subnet
       address_prefixes = ["10.10.5.0/25"]
       network_security_group = {
         id = module.nsg_avd.resource_id
@@ -256,7 +335,7 @@ module "vnet_avd" {
 resource "azurerm_virtual_network_peering" "hub_to_application" {
   provider                  = azurerm.subscription_hub
   name                      = "peer-${local.hub_vnet_name}-to-${local.app_spoke_base}"
-  resource_group_name       = azurerm_resource_group.hub.name
+  resource_group_name       = azurerm_resource_group.vnet_hub_eastus.name
   virtual_network_name      = module.vnet_hub.name
   remote_virtual_network_id = module.vnet_application.resource_id
   allow_forwarded_traffic   = true
@@ -276,7 +355,7 @@ resource "azurerm_virtual_network_peering" "application_to_hub" {
 resource "azurerm_virtual_network_peering" "hub_to_avd" {
   provider                  = azurerm.subscription_hub
   name                      = "peer-${local.hub_vnet_name}-to-${local.avd_spoke_base}"
-  resource_group_name       = azurerm_resource_group.hub.name
+  resource_group_name       = azurerm_resource_group.vnet_hub_eastus.name
   virtual_network_name      = module.vnet_hub.name
   remote_virtual_network_id = module.vnet_avd.resource_id
   allow_forwarded_traffic   = true
@@ -322,7 +401,7 @@ module "naming_flow_avd" {
 resource "azurerm_storage_account" "flow_logs_hub" {
   provider                        = azurerm.subscription_hub
   name                            = module.naming_flow_hub.storage_account
-  resource_group_name             = azurerm_resource_group.hub.name
+  resource_group_name             = azurerm_resource_group.vnet_hub_eastus.name
   location                        = var.region
   account_tier                    = "Standard"
   account_replication_type        = "LRS"
@@ -369,125 +448,24 @@ resource "azurerm_storage_account" "flow_logs_avd" {
 
 resource "azurerm_network_watcher" "hub" {
   provider            = azurerm.subscription_hub
-  name                = module.naming_hub.network_watcher
+  name                = module.naming_vnet_hub_eastus.network_watcher
   location            = var.region
-  resource_group_name = azurerm_resource_group.hub.name
+  resource_group_name = azurerm_resource_group.vnet_hub_eastus.name
 }
 
 resource "azurerm_network_watcher" "application" {
   provider            = azurerm.subscription_application
-  name                = module.naming_application.network_watcher
+  name                = module.naming_vnet_application_eastus_001.network_watcher
   location            = var.region
   resource_group_name = azurerm_resource_group.application.name
 }
 
 resource "azurerm_network_watcher" "avd" {
   provider            = azurerm.subscription_avd
-  name                = module.naming_avd.network_watcher
+  name                = module.naming_vnet_avd_eastus_001.network_watcher
   location            = var.region
   resource_group_name = azurerm_resource_group.avd.name
 }
-
-# azurerm_network_watcher_flow_log requires network_security_group_id in current provider.
-# Using azapi_resource for VNet-scoped flow logs (version=2) via the Azure REST API directly.
-# resource "azapi_resource" "flow_log_hub" {
-#   provider  = azapi.subscription_hub
-#   type      = "Microsoft.Network/networkWatchers/flowLogs@2023-11-01"
-#   name      = module.naming_hub.network_watcher_flow_log
-#   parent_id = azurerm_network_watcher.hub.id
-#   location  = var.region
-
-#   body = {
-#     properties = {
-#       storageId        = azurerm_storage_account.flow_logs_hub.id
-#       enabled          = true
-#       targetResourceId = module.vnet_hub.resource_id
-#       format = {
-#         type    = "JSON"
-#         version = 2
-#       }
-#       retentionPolicy = {
-#         days    = 90
-#         enabled = true
-#       }
-#       flowAnalyticsConfiguration = {
-#         networkWatcherFlowAnalyticsConfiguration = {
-#           enabled                  = true
-#           workspaceId              = azurerm_log_analytics_workspace.main.workspace_id
-#           workspaceRegion          = var.region
-#           workspaceResourceId      = azurerm_log_analytics_workspace.main.id
-#           trafficAnalyticsInterval = 10
-#         }
-#       }
-#     }
-#   }
-# }
-
-# resource "azapi_resource" "flow_log_application" {
-#   provider  = azapi.subscription_application
-#   type      = "Microsoft.Network/networkWatchers/flowLogs@2023-11-01"
-#   name      = module.naming_application.network_watcher_flow_log
-#   parent_id = azurerm_network_watcher.application.id
-#   location  = var.region
-
-#   body = {
-#     properties = {
-#       storageId        = azurerm_storage_account.flow_logs_application.id
-#       enabled          = true
-#       targetResourceId = module.vnet_application.resource_id
-#       format = {
-#         type    = "JSON"
-#         version = 2
-#       }
-#       retentionPolicy = {
-#         days    = 90
-#         enabled = true
-#       }
-#       flowAnalyticsConfiguration = {
-#         networkWatcherFlowAnalyticsConfiguration = {
-#           enabled                  = true
-#           workspaceId              = azurerm_log_analytics_workspace.main.workspace_id
-#           workspaceRegion          = var.region
-#           workspaceResourceId      = azurerm_log_analytics_workspace.main.id
-#           trafficAnalyticsInterval = 10
-#         }
-#       }
-#     }
-#   }
-# }
-
-# resource "azapi_resource" "flow_log_avd" {
-#   provider  = azapi.subscription_avd
-#   type      = "Microsoft.Network/networkWatchers/flowLogs@2023-11-01"
-#   name      = module.naming_avd.network_watcher_flow_log
-#   parent_id = azurerm_network_watcher.avd.id
-#   location  = var.region
-
-#   body = {
-#     properties = {
-#       storageId        = azurerm_storage_account.flow_logs_avd.id
-#       enabled          = true
-#       targetResourceId = module.vnet_avd.resource_id
-#       format = {
-#         type    = "JSON"
-#         version = 2
-#       }
-#       retentionPolicy = {
-#         days    = 90
-#         enabled = true
-#       }
-#       flowAnalyticsConfiguration = {
-#         networkWatcherFlowAnalyticsConfiguration = {
-#           enabled                  = true
-#           workspaceId              = azurerm_log_analytics_workspace.main.workspace_id
-#           workspaceRegion          = var.region
-#           workspaceResourceId      = azurerm_log_analytics_workspace.main.id
-#           trafficAnalyticsInterval = 10
-#         }
-#       }
-#     }
-#   }
-# }
 
 # ============================================================
 # Route Tables — spoke subnets (always created, routes only when firewall enabled)
@@ -501,9 +479,9 @@ module "rt_application" {
     azurerm = azurerm.subscription_application
   }
 
-  name                = module.naming_application.route_table
+  name                = module.naming_vnet_application_eastus_001.route_table
   location            = var.region
-  resource_group_name = azurerm_resource_group.application.name
+  resource_group_name = azurerm_resource_group.vnet_application_eastus_001.name
 }
 
 module "rt_avd" {
