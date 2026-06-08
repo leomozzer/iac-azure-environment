@@ -85,7 +85,7 @@ resource "azurerm_resource_group" "vnet_avd_eastus_001" {
 }
 
 # Network Security Groups — AVM module (one per VNet, associated with workload subnets)
-module "nsg_hub" {
+module "nsg_hub_eastus_001" {
   source  = "Azure/avm-res-network-networksecuritygroup/azurerm"
   version = "0.5.1"
 
@@ -107,7 +107,7 @@ module "nsg_hub" {
   }
 }
 
-module "nsg_application" {
+module "nsg_application_eastus_001" {
   source  = "Azure/avm-res-network-networksecuritygroup/azurerm"
   version = "0.5.1"
 
@@ -129,7 +129,7 @@ module "nsg_application" {
   }
 }
 
-module "nsg_avd" {
+module "nsg_avd_eastus_001" {
   source  = "Azure/avm-res-network-networksecuritygroup/azurerm"
   version = "0.5.1"
 
@@ -173,8 +173,8 @@ module "nsg_hub_westeurope" {
   }
 }
 
-# Hub VNet — Subscription A
-module "vnet_hub" {
+# Hub VNet — East US
+module "vnet_hub_eastus" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "0.17.1"
 
@@ -193,7 +193,7 @@ module "vnet_hub" {
       name             = module.naming_vnet_hub_eastus.subnet
       address_prefixes = ["10.10.0.0/24"]
       network_security_group = {
-        id = module.nsg_hub.resource_id
+        id = module.nsg_hub_eastus_001.resource_id
       }
     }
     firewall = {
@@ -256,7 +256,7 @@ module "vnet_hub_westeurope" {
 }
 
 # Application Spoke VNet — Subscription B
-module "vnet_application" {
+module "vnet_application_eastus_001" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "0.17.1"
 
@@ -275,10 +275,10 @@ module "vnet_application" {
       name             = module.naming_vnet_application_eastus_001.subnet
       address_prefixes = ["10.10.2.0/24"]
       network_security_group = {
-        id = module.nsg_application.resource_id
+        id = module.nsg_application_eastus_001.resource_id
       }
       route_table = {
-        id = module.rt_application.resource_id
+        id = module.rt_application_eastus_001.resource_id
       }
     }
   }
@@ -294,7 +294,7 @@ module "vnet_application" {
 }
 
 # AVD Spoke VNet — Subscription C
-module "vnet_avd" {
+module "vnet_avd_eastus_001" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "0.17.1"
 
@@ -313,10 +313,10 @@ module "vnet_avd" {
       name             = module.naming_vnet_avd_eastus_001.subnet
       address_prefixes = ["10.10.5.0/25"]
       network_security_group = {
-        id = module.nsg_avd.resource_id
+        id = module.nsg_avd_eastus_001.resource_id
       }
       route_table = {
-        id = module.rt_avd.resource_id
+        id = module.rt_avd_eastus_001.resource_id
       }
     }
   }
@@ -336,8 +336,8 @@ resource "azurerm_virtual_network_peering" "hub_to_application" {
   provider                  = azurerm.subscription_hub
   name                      = "peer-${local.hub_vnet_name}-to-${local.app_spoke_base}"
   resource_group_name       = azurerm_resource_group.vnet_hub_eastus.name
-  virtual_network_name      = module.vnet_hub.name
-  remote_virtual_network_id = module.vnet_application.resource_id
+  virtual_network_name      = module.vnet_hub_eastus.name
+  remote_virtual_network_id = module.vnet_application_eastus_001.resource_id
   allow_forwarded_traffic   = true
   allow_gateway_transit     = false
 }
@@ -345,9 +345,9 @@ resource "azurerm_virtual_network_peering" "hub_to_application" {
 resource "azurerm_virtual_network_peering" "application_to_hub" {
   provider                  = azurerm.subscription_application
   name                      = "peer-${local.app_spoke_base}-to-${local.hub_vnet_name}"
-  resource_group_name       = azurerm_resource_group.application.name
-  virtual_network_name      = module.vnet_application.name
-  remote_virtual_network_id = module.vnet_hub.resource_id
+  resource_group_name       = azurerm_resource_group.vnet_application_eastus_001.name
+  virtual_network_name      = module.vnet_application_eastus_001.name
+  remote_virtual_network_id = module.vnet_hub_eastus.resource_id
   allow_forwarded_traffic   = true
   use_remote_gateways       = false
 }
@@ -356,8 +356,8 @@ resource "azurerm_virtual_network_peering" "hub_to_avd" {
   provider                  = azurerm.subscription_hub
   name                      = "peer-${local.hub_vnet_name}-to-${local.avd_spoke_base}"
   resource_group_name       = azurerm_resource_group.vnet_hub_eastus.name
-  virtual_network_name      = module.vnet_hub.name
-  remote_virtual_network_id = module.vnet_avd.resource_id
+  virtual_network_name      = module.vnet_hub_eastus.name
+  remote_virtual_network_id = module.vnet_avd_eastus_001.resource_id
   allow_forwarded_traffic   = true
   allow_gateway_transit     = false
 }
@@ -365,9 +365,9 @@ resource "azurerm_virtual_network_peering" "hub_to_avd" {
 resource "azurerm_virtual_network_peering" "avd_to_hub" {
   provider                  = azurerm.subscription_avd
   name                      = "peer-${local.avd_spoke_base}-to-${local.hub_vnet_name}"
-  resource_group_name       = azurerm_resource_group.avd.name
-  virtual_network_name      = module.vnet_avd.name
-  remote_virtual_network_id = module.vnet_hub.resource_id
+  resource_group_name       = azurerm_resource_group.vnet_avd_eastus_001.name
+  virtual_network_name      = module.vnet_avd_eastus_001.name
+  remote_virtual_network_id = module.vnet_hub_eastus.resource_id
   allow_forwarded_traffic   = true
   use_remote_gateways       = false
 }
@@ -417,7 +417,7 @@ resource "azurerm_storage_account" "flow_logs_hub" {
 resource "azurerm_storage_account" "flow_logs_application" {
   provider                        = azurerm.subscription_application
   name                            = module.naming_flow_app.storage_account
-  resource_group_name             = azurerm_resource_group.application.name
+  resource_group_name             = azurerm_resource_group.vnet_application_eastus_001.name
   location                        = var.region
   account_tier                    = "Standard"
   account_replication_type        = "LRS"
@@ -433,7 +433,7 @@ resource "azurerm_storage_account" "flow_logs_application" {
 resource "azurerm_storage_account" "flow_logs_avd" {
   provider                        = azurerm.subscription_avd
   name                            = module.naming_flow_avd.storage_account
-  resource_group_name             = azurerm_resource_group.avd.name
+  resource_group_name             = azurerm_resource_group.vnet_avd_eastus_001.name
   location                        = var.region
   account_tier                    = "Standard"
   account_replication_type        = "LRS"
@@ -446,32 +446,32 @@ resource "azurerm_storage_account" "flow_logs_avd" {
   }
 }
 
-resource "azurerm_network_watcher" "hub" {
+resource "azurerm_network_watcher" "hub_eastus" {
   provider            = azurerm.subscription_hub
   name                = module.naming_vnet_hub_eastus.network_watcher
   location            = var.region
   resource_group_name = azurerm_resource_group.vnet_hub_eastus.name
 }
 
-resource "azurerm_network_watcher" "application" {
+resource "azurerm_network_watcher" "application_eastus_001" {
   provider            = azurerm.subscription_application
   name                = module.naming_vnet_application_eastus_001.network_watcher
   location            = var.region
-  resource_group_name = azurerm_resource_group.application.name
+  resource_group_name = azurerm_resource_group.vnet_application_eastus_001.name
 }
 
-resource "azurerm_network_watcher" "avd" {
+resource "azurerm_network_watcher" "avd_eastus_001" {
   provider            = azurerm.subscription_avd
   name                = module.naming_vnet_avd_eastus_001.network_watcher
   location            = var.region
-  resource_group_name = azurerm_resource_group.avd.name
+  resource_group_name = azurerm_resource_group.vnet_avd_eastus_001.name
 }
 
 # ============================================================
 # Route Tables — spoke subnets (always created, routes only when firewall enabled)
 # ============================================================
 
-module "rt_application" {
+module "rt_application_eastus_001" {
   source  = "Azure/avm-res-network-routetable/azurerm"
   version = "0.5.0"
 
@@ -484,7 +484,7 @@ module "rt_application" {
   resource_group_name = azurerm_resource_group.vnet_application_eastus_001.name
 }
 
-module "rt_avd" {
+module "rt_avd_eastus_001" {
   source  = "Azure/avm-res-network-routetable/azurerm"
   version = "0.5.0"
 
@@ -492,17 +492,17 @@ module "rt_avd" {
     azurerm = azurerm.subscription_avd
   }
 
-  name                = module.naming_avd.route_table
+  name                = module.naming_vnet_avd_eastus_001.route_table
   location            = var.region
-  resource_group_name = azurerm_resource_group.avd.name
+  resource_group_name = azurerm_resource_group.vnet_avd_eastus_001.name
 }
 
 resource "azurerm_route" "application_default" {
   count                  = var.enable_firewall ? 1 : 0
   provider               = azurerm.subscription_application
   name                   = "default-to-firewall"
-  resource_group_name    = azurerm_resource_group.application.name
-  route_table_name       = module.rt_application.resource.name
+  resource_group_name    = azurerm_resource_group.vnet_application_eastus_001.name
+  route_table_name       = module.rt_application_eastus_001.resource.name
   address_prefix         = "0.0.0.0/0"
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = module.firewall_hub[0].resource.ip_configuration[0].private_ip_address
@@ -512,8 +512,8 @@ resource "azurerm_route" "avd_default" {
   count                  = var.enable_firewall ? 1 : 0
   provider               = azurerm.subscription_avd
   name                   = "default-to-firewall"
-  resource_group_name    = azurerm_resource_group.avd.name
-  route_table_name       = module.rt_avd.resource.name
+  resource_group_name    = azurerm_resource_group.vnet_avd_eastus_001.name
+  route_table_name       = module.rt_avd_eastus_001.resource.name
   address_prefix         = "0.0.0.0/0"
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = module.firewall_hub[0].resource.ip_configuration[0].private_ip_address
@@ -533,8 +533,8 @@ module "pip_firewall" {
     azapi   = azapi.subscription_hub
   }
 
-  name                = module.naming_hub.public_ip
-  resource_group_name = azurerm_resource_group.hub.name
+  name                = module.naming_vnet_hub_eastus.public_ip
+  resource_group_name = azurerm_resource_group.vnet_hub_eastus.name
   location            = var.region
   allocation_method   = "Static"
   sku                 = "Standard"
@@ -551,8 +551,8 @@ module "firewall_policy_hub" {
     azapi   = azapi.subscription_hub
   }
 
-  name                = module.naming_hub.firewall_policy
-  resource_group_name = azurerm_resource_group.hub.name
+  name                = module.naming_vnet_hub_eastus.firewall_policy
+  resource_group_name = azurerm_resource_group.vnet_hub_eastus.name
   location            = var.region
   firewall_policy_sku = "Standard"
 
@@ -576,8 +576,8 @@ module "firewall_hub" {
     azurerm = azurerm.subscription_hub
   }
 
-  name                = module.naming_hub.azure_firewall
-  resource_group_name = azurerm_resource_group.hub.name
+  name                = module.naming_vnet_hub_eastus.azure_firewall
+  resource_group_name = azurerm_resource_group.vnet_hub_eastus.name
   location            = var.region
   firewall_sku_name   = "AZFW_VNet"
   firewall_sku_tier   = "Standard"
@@ -586,8 +586,8 @@ module "firewall_hub" {
 
   ip_configurations = {
     ipconfig = {
-      name                 = "ipconfig-${module.naming_hub.azure_firewall}"
-      subnet_id            = module.vnet_hub.subnets["firewall"].resource_id
+      name                 = "ipconfig-${module.naming_vnet_hub_eastus.azure_firewall}"
+      subnet_id            = module.vnet_hub_eastus.subnets["firewall"].resource_id
       public_ip_address_id = module.pip_firewall[0].resource_id
     }
   }
@@ -620,16 +620,16 @@ resource "azurerm_private_dns_zone" "zones" {
   provider            = azurerm.subscription_hub
   for_each            = local.private_dns_zones
   name                = each.value
-  resource_group_name = azurerm_resource_group.hub.name
+  resource_group_name = azurerm_resource_group.vnet_hub_eastus.name
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "hub" {
   provider              = azurerm.subscription_hub
   for_each              = local.private_dns_zones
   name                  = "link-hub-${each.key}"
-  resource_group_name   = azurerm_resource_group.hub.name
+  resource_group_name   = azurerm_resource_group.vnet_hub_eastus.name
   private_dns_zone_name = azurerm_private_dns_zone.zones[each.key].name
-  virtual_network_id    = module.vnet_hub.resource_id
+  virtual_network_id    = module.vnet_hub_eastus.resource_id
   registration_enabled  = false
 }
 
@@ -637,9 +637,9 @@ resource "azurerm_private_dns_zone_virtual_network_link" "application" {
   provider              = azurerm.subscription_hub
   for_each              = local.private_dns_zones
   name                  = "link-application-${each.key}"
-  resource_group_name   = azurerm_resource_group.hub.name
+  resource_group_name   = azurerm_resource_group.vnet_hub_eastus.name
   private_dns_zone_name = azurerm_private_dns_zone.zones[each.key].name
-  virtual_network_id    = module.vnet_application.resource_id
+  virtual_network_id    = module.vnet_application_eastus_001.resource_id
   registration_enabled  = false
 }
 
@@ -647,8 +647,8 @@ resource "azurerm_private_dns_zone_virtual_network_link" "avd" {
   provider              = azurerm.subscription_hub
   for_each              = local.private_dns_zones
   name                  = "link-avd-${each.key}"
-  resource_group_name   = azurerm_resource_group.hub.name
+  resource_group_name   = azurerm_resource_group.vnet_hub_eastus.name
   private_dns_zone_name = azurerm_private_dns_zone.zones[each.key].name
-  virtual_network_id    = module.vnet_avd.resource_id
+  virtual_network_id    = module.vnet_avd_eastus_001.resource_id
   registration_enabled  = false
 }
