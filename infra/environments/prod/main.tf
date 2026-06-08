@@ -18,6 +18,13 @@ resource "azurerm_log_analytics_workspace" "main" {
   retention_in_days   = 30
 }
 
+module "log_analytics_monitoring_westeurope" {
+  source   = "../../modules/log-analytics-workspace"
+  purpose  = "monitoring"
+  region   = "westeurope"
+  instance = "001"
+}
+
 # ============================================================
 # Hub-and-Spoke Landing Zone
 # ============================================================
