@@ -39,14 +39,7 @@ module "nsg" {
   location            = var.region
   resource_group_name = module.resource_group.resource.name
 
-  diagnostic_settings = var.log_analytics_workspace_id != null ? {
-    to_log_analytics = {
-      name                  = "diag-setting"
-      workspace_resource_id = var.log_analytics_workspace_id
-      log_groups            = ["allLogs"]
-      metric_categories     = []
-    }
-  } : {}
+  diagnostic_settings = var.diagnostic_settings
 
   depends_on = [module.resource_group]
 }
@@ -106,14 +99,7 @@ module "vnet" {
     } : {}
   )
 
-  diagnostic_settings = var.log_analytics_workspace_id != null ? {
-    to_log_analytics = {
-      name                  = "diag-setting"
-      workspace_resource_id = var.log_analytics_workspace_id
-      log_groups            = ["allLogs"]
-      metric_categories     = ["AllMetrics"]
-    }
-  } : {}
+  diagnostic_settings = var.diagnostic_settings
 }
 
 # ============================================================
@@ -175,14 +161,7 @@ module "firewall_hub" {
     }
   }
 
-  diagnostic_settings = var.log_analytics_workspace_id != null ? {
-    to_log_analytics = {
-      name                  = "diag-setting"
-      workspace_resource_id = var.log_analytics_workspace_id
-      log_groups            = ["allLogs"]
-      metric_categories     = ["AllMetrics"]
-    }
-  } : {}
+  diagnostic_settings = var.diagnostic_settings
 }
 
 module "rule_collection_groups" {
@@ -217,14 +196,7 @@ module "nat_gateway" {
     }
   }
 
-  diagnostic_settings = var.log_analytics_workspace_id != null ? {
-    to_log_analytics = {
-      name                  = "diag-setting"
-      workspace_resource_id = var.log_analytics_workspace_id
-      log_groups            = ["allLogs"]
-      metric_categories     = ["AllMetrics"]
-    }
-  } : {}
+  diagnostic_settings = var.diagnostic_settings
 }
 
 resource "azurerm_subnet_nat_gateway_association" "workload" {

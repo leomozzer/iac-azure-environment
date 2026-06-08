@@ -134,6 +134,22 @@ variable "log_analytics_workspace_id" {
   description = "Resource ID of a Log Analytics Workspace. When set, diagnostic settings are configured on all resources that support them (VNet, NSG, Azure Firewall, Firewall Policy)."
 }
 
+variable "diagnostic_settings" {
+  type = map(object({
+    name                                     = optional(string, null)
+    log_groups                               = optional(set(string), ["allLogs"])
+    metric_categories                        = optional(set(string), ["AllMetrics"])
+    log_analytics_destination_type           = optional(string, "Dedicated")
+    workspace_resource_id                    = optional(string, null)
+    storage_account_resource_id              = optional(string, null)
+    event_hub_authorization_rule_resource_id = optional(string, null)
+    event_hub_name                           = optional(string, null)
+    marketplace_partner_resource_id          = optional(string, null)
+  }))
+  default     = {}
+  description = "Diagnostic settings passed to all resources (NSG, VNet, Firewall, NAT Gateway). Map keys must be statically known strings — do not use computed values as keys. Example key: \"to_log_analytics\"."
+}
+
 variable "create_workload_nsg" {
   type        = bool
   default     = true

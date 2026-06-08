@@ -26,5 +26,9 @@ module "vnet_hub_eastus_001" {
   subnet_workload_cidr = "10.10.0.0/24"
   subnet_bastion_cidr  = "10.10.1.64/26"
 
-  log_analytics_workspace_id = module.log_analytics_monitoring_eastus.workspace_resource_id
+  diagnostic_settings = {
+    to_log_analytics = {
+      workspace_resource_id = module.log_analytics_monitoring_eastus.workspace_resource_id
+    }
+  }
 }
