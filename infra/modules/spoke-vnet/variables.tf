@@ -67,12 +67,13 @@ variable "create_workload_nsg" {
 
 variable "additional_subnets" {
   type = map(object({
-    name       = string
-    cidr       = string
-    create_nsg = optional(bool, true)
+    name               = string
+    cidr               = string
+    create_nsg         = optional(bool, false)
+    create_route_table = optional(bool, false)
   }))
   default     = {}
-  description = "Additional subnets to create inside the spoke VNet. Map key is an internal Terraform reference (e.g. \"database\"). name is the Azure subnet name (follow project naming convention: snet-{purpose}-{region}-{instance}). cidr must fall within address_space. The spoke route table is always attached. An NSG is auto-created and attached unless create_nsg = false; the NSG name is derived by replacing the snet- prefix with nsg- in the subnet name."
+  description = "Additional subnets to create inside the spoke VNet. Map key is an internal Terraform reference (e.g. \"database\"). name is the Azure subnet name (follow project naming convention: snet-{purpose}-{region}-{instance}). cidr must fall within address_space. By default the shared spoke route table and workload NSG are attached. Set create_nsg = true to auto-create a dedicated NSG (named by replacing snet- with nsg- in the subnet name). Set create_route_table = true to auto-create a dedicated route table (named by replacing snet- with rt- in the subnet name)."
 }
 
 variable "diagnostic_settings" {

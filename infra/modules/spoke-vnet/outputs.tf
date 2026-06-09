@@ -42,3 +42,8 @@ output "additional_nsg_ids" {
   description = "Map of NSG resource IDs for additional subnets where create_nsg = true. Keyed by the same keys as var.additional_subnets."
   value       = { for k, v in var.additional_subnets : k => module.additional_nsg[k].resource_id if v.create_nsg }
 }
+
+output "additional_route_table_ids" {
+  description = "Map of dedicated route table resource IDs for additional subnets where create_route_table = true. Keyed by the same keys as var.additional_subnets."
+  value       = { for k, v in var.additional_subnets : k => module.additional_route_table[k].resource_id if v.create_route_table }
+}

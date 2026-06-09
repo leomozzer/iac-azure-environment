@@ -50,8 +50,11 @@ module "vnet_spoke_application_eastus_001" {
   additional_subnets = {
     database = {
       name = "snet-database-001"
-      cidr = "10.10.2.128/27"
+      cidr = "10.10.2.128/28"
     }
+    storage = {
+      name = "snet-storage-001"
+      cidr = "10.10.2.144/28"
   }
 
   diagnostic_settings = {

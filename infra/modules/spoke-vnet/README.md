@@ -24,7 +24,7 @@ Provisions a spoke Virtual Network in Azure with a workload subnet, optional Net
 | hub_resource_group_name | string | — | Yes | Name of the hub resource group. Used in the hub-to-spoke peering resource (requires azurerm.hub provider). |
 | instance | string | "001" | No | Zero-padded 3-digit instance identifier passed to the naming module. Defaults to '001'. |
 | subnet_bastion_cidr | string | null | No | CIDR block for AzureBastionSubnet. When set, the bastion subnet is added to the VNet without an NSG or route table. |
-| additional_subnets | `map(object({ name = string, cidr = string, create_nsg = optional(bool, true) }))` | `{}` | No | Additional subnets to create inside the spoke VNet. Key = internal Terraform ref. `name` = Azure subnet name (`snet-{purpose}-{region}-{instance}`). `cidr` must fall within `address_space`. Route table always attached. NSG auto-created and attached unless `create_nsg = false`; NSG name is derived by replacing `snet-` prefix with `nsg-` in the subnet name. |
+| additional_subnets | `map(object({ name = string, cidr = string, create_nsg = optional(bool, false), create_route_table = optional(bool, false) }))` | `{}` | No | Additional subnets. Key = internal Terraform ref. `name` = Azure subnet name (`snet-{purpose}-{region}-{instance}`). `cidr` must fall within `address_space`. By default the shared spoke route table and workload NSG are attached. Set `create_nsg = true` to auto-create a dedicated NSG (name derived by replacing `snet-` with `nsg-`). Set `create_route_table = true` to auto-create a dedicated route table (name derived by replacing `snet-` with `rt-`). |
 | hub_firewall_private_ip | string | null | No | Private IP address of the hub Azure Firewall. When set, a default route (0.0.0.0/0 → VirtualAppliance) is added to the spoke route table to force-tunnel traffic through the firewall. |
 | create_workload_nsg | bool | true | No | When false, no NSG is created or attached to the workload subnet. |
 | diagnostic_settings | map(object) | {} | No | Diagnostic settings passed to NSG and VNet. Map keys must be statically known strings — do not use computed values as keys. Example key: "to_log_analytics". |
@@ -42,6 +42,7 @@ Provisions a spoke Virtual Network in Azure with a workload subnet, optional Net
 | nsg_resource_id | The resource ID of the Network Security Group attached to the workload subnet. Null when create_workload_nsg = false. |
 | additional_subnet_ids | Map of resource IDs for additional subnets, keyed by the same keys as `var.additional_subnets`. Empty map when no additional subnets are defined. |
 | additional_nsg_ids | Map of NSG resource IDs for additional subnets where `create_nsg = true`. Keyed by the same keys as `var.additional_subnets`. |
+| additional_route_table_ids | Map of dedicated route table resource IDs for additional subnets where `create_route_table = true`. |
 
 ## Resources Created
 
@@ -52,7 +53,8 @@ Provisions a spoke Virtual Network in Azure with a workload subnet, optional Net
 - **Network Security Group** (optional): Attached to workload subnet (can be disabled with create_workload_nsg = false)
 - **Route Table**: Always attached to workload subnet; contains default firewall route when hub_firewall_private_ip is set
 - **VNet Peerings**: Bidirectional peering between spoke and hub (spoke-to-hub and hub-to-spoke)
-- **module.additional_nsg**: One NSG per additional subnet entry where `create_nsg = true`
+- **module.additional_nsg**: dedicated NSG per additional subnet where `create_nsg = true` (opt-in; shared NSG used by default)
+- **module.additional_route_table**: dedicated route table per additional subnet where `create_route_table = true` (opt-in; shared route table used by default)
 
 ## Usage
 
@@ -146,13 +148,14 @@ module "vnet_spoke_application_eastus_001" {
   additional_subnets = {
     database = {
       name = "snet-database-eus-001"
-      cidr = "10.20.0.128/26"
-      # create_nsg defaults to true — NSG named nsg-database-eus-001 is auto-created
+      cidr = "10.10.2.128/27"
+      # defaults: shared spoke RT and NSG attached
     }
-    management = {
-      name       = "snet-management-eus-001"
-      cidr       = "10.20.0.192/27"
-      create_nsg = false
+    isolated = {
+      name               = "snet-isolated-eus-001"
+      cidr               = "10.10.2.160/27"
+      create_nsg         = true   # dedicated NSG: nsg-isolated-eus-001
+      create_route_table = true   # dedicated RT:  rt-isolated-eus-001
     }
   }
 
