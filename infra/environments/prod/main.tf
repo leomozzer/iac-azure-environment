@@ -54,3 +54,29 @@ module "vnet_hub_westeurope_001" {
     }
   }
 }
+
+module "vnet_spoke_application_eastus_001" {
+  source = "../../modules/spoke-vnet"
+
+  purpose              = "application"
+  region               = "eastus"
+  instance             = "001"
+  address_space        = ["10.10.2.0/24"]
+  subnet_workload_cidr = "10.10.2.0/25"
+
+  hub_vnet_resource_id    = module.vnet_hub_eastus_001.vnet_resource_id
+  hub_vnet_name           = module.vnet_hub_eastus_001.vnet_name
+  hub_resource_group_name = module.vnet_hub_eastus_001.resource_group_name
+
+  diagnostic_settings = {
+    to_log_analytics = {
+      name                  = "diag-setting"
+      workspace_resource_id = module.log_analytics_monitoring_eastus.workspace_resource_id
+    }
+  }
+
+  providers = {
+    azurerm     = azurerm.subscription_application
+    azurerm.hub = azurerm.subscription_hub
+  }
+}
