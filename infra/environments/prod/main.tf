@@ -114,7 +114,7 @@ module "vnet_spoke_application_westeurope_001" {
   region               = "westeurope"
   instance             = "001"
   address_space        = ["136.0.2.128/25"]
-  subnet_workload_cidr = "136.0.2.0/24"
+  subnet_workload_cidr = "136.0.2.128/26"
 
   hub_vnet_resource_id    = module.vnet_hub_westeurope_001.vnet_resource_id
   hub_vnet_name           = module.vnet_hub_westeurope_001.vnet_name
