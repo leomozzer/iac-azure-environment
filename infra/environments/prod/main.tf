@@ -33,3 +33,24 @@ module "vnet_hub_eastus_001" {
     }
   }
 }
+
+# ============================================================
+# Hub VNet — West Europe
+# ============================================================
+
+module "vnet_hub_westeurope_001" {
+  source = "../../modules/hub-vnet"
+
+  purpose              = "hub"
+  region               = "westeurope"
+  instance             = "001"
+  address_space        = ["136.0.0.0/23"]
+  subnet_workload_cidr = "136.0.0.0/24"
+
+  diagnostic_settings = {
+    to_log_analytics = {
+      name                  = "diag-setting"
+      workspace_resource_id = module.log_analytics_monitoring_westeurope.workspace_resource_id
+    }
+  }
+}
