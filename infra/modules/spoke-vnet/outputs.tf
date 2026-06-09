@@ -37,3 +37,8 @@ output "additional_subnet_ids" {
   description = "Map of resource IDs for additional subnets, keyed by the same keys as var.additional_subnets. Empty map when no additional subnets are defined."
   value       = { for k in keys(var.additional_subnets) : k => module.vnet.subnets[k].resource_id }
 }
+
+output "additional_nsg_ids" {
+  description = "Map of NSG resource IDs for additional subnets where create_nsg = true. Keyed by the same keys as var.additional_subnets."
+  value       = { for k, v in var.additional_subnets : k => module.additional_nsg[k].resource_id if v.create_nsg }
+}

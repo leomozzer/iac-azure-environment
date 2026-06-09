@@ -44,6 +44,24 @@ module "nsg" {
 }
 
 # ============================================================
+# Block 3b — NSGs for additional subnets
+# ============================================================
+
+module "additional_nsg" {
+  for_each = { for k, v in var.additional_subnets : k => v if v.create_nsg }
+  source   = "Azure/avm-res-network-networksecuritygroup/azurerm"
+  version  = "0.5.1"
+
+  name                = replace(each.value.name, "/^snet-/", "nsg-")
+  location            = var.region
+  resource_group_name = module.resource_group.resource.name
+
+  diagnostic_settings = var.diagnostic_settings
+
+  depends_on = [module.resource_group]
+}
+
+# ============================================================
 # Block 4 — Route Table
 # ============================================================
 
@@ -93,6 +111,12 @@ module "vnet" {
     { for k, v in var.additional_subnets : k => {
       name             = v.name
       address_prefixes = [v.cidr]
+      network_security_group = v.create_nsg ? {
+        id = module.additional_nsg[k].resource_id
+      } : null
+      route_table = {
+        id = module.route_table.resource_id
+      }
     } }
   )
 

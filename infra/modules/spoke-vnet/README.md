@@ -24,7 +24,7 @@ Provisions a spoke Virtual Network in Azure with a workload subnet, optional Net
 | hub_resource_group_name | string | — | Yes | Name of the hub resource group. Used in the hub-to-spoke peering resource (requires azurerm.hub provider). |
 | instance | string | "001" | No | Zero-padded 3-digit instance identifier passed to the naming module. Defaults to '001'. |
 | subnet_bastion_cidr | string | null | No | CIDR block for AzureBastionSubnet. When set, the bastion subnet is added to the VNet without an NSG or route table. |
-| additional_subnets | `map(object({ name = string, cidr = string }))` | `{}` | No | Additional subnets to create inside the spoke VNet. Key = internal Terraform ref (e.g. `"database"`). `name` = Azure subnet name following project convention (`snet-{purpose}-{region}-{instance}`). `cidr` must fall within `address_space`. No NSG or route table is attached. |
+| additional_subnets | `map(object({ name = string, cidr = string, create_nsg = optional(bool, true) }))` | `{}` | No | Additional subnets to create inside the spoke VNet. Key = internal Terraform ref. `name` = Azure subnet name (`snet-{purpose}-{region}-{instance}`). `cidr` must fall within `address_space`. Route table always attached. NSG auto-created and attached unless `create_nsg = false`; NSG name is derived by replacing `snet-` prefix with `nsg-` in the subnet name. |
 | hub_firewall_private_ip | string | null | No | Private IP address of the hub Azure Firewall. When set, a default route (0.0.0.0/0 → VirtualAppliance) is added to the spoke route table to force-tunnel traffic through the firewall. |
 | create_workload_nsg | bool | true | No | When false, no NSG is created or attached to the workload subnet. |
 | diagnostic_settings | map(object) | {} | No | Diagnostic settings passed to NSG and VNet. Map keys must be statically known strings — do not use computed values as keys. Example key: "to_log_analytics". |
@@ -41,6 +41,7 @@ Provisions a spoke Virtual Network in Azure with a workload subnet, optional Net
 | resource_group_id | The resource ID of the resource group that contains all spoke VNet resources. |
 | nsg_resource_id | The resource ID of the Network Security Group attached to the workload subnet. Null when create_workload_nsg = false. |
 | additional_subnet_ids | Map of resource IDs for additional subnets, keyed by the same keys as `var.additional_subnets`. Empty map when no additional subnets are defined. |
+| additional_nsg_ids | Map of NSG resource IDs for additional subnets where `create_nsg = true`. Keyed by the same keys as `var.additional_subnets`. |
 
 ## Resources Created
 
@@ -51,6 +52,7 @@ Provisions a spoke Virtual Network in Azure with a workload subnet, optional Net
 - **Network Security Group** (optional): Attached to workload subnet (can be disabled with create_workload_nsg = false)
 - **Route Table**: Always attached to workload subnet; contains default firewall route when hub_firewall_private_ip is set
 - **VNet Peerings**: Bidirectional peering between spoke and hub (spoke-to-hub and hub-to-spoke)
+- **module.additional_nsg**: One NSG per additional subnet entry where `create_nsg = true`
 
 ## Usage
 
@@ -129,7 +131,7 @@ module "spoke_vnet_with_bastion" {
 }
 ```
 
-### Example 4: Spoke VNet with an additional database subnet
+### Example 4: Spoke VNet with additional subnets and NSG control
 
 ```hcl
 module "vnet_spoke_application_eastus_001" {
@@ -145,6 +147,12 @@ module "vnet_spoke_application_eastus_001" {
     database = {
       name = "snet-database-eus-001"
       cidr = "10.20.0.128/26"
+      # create_nsg defaults to true — NSG named nsg-database-eus-001 is auto-created
+    }
+    management = {
+      name       = "snet-management-eus-001"
+      cidr       = "10.20.0.192/27"
+      create_nsg = false
     }
   }
 
