@@ -53,12 +53,12 @@ module "vnet_spoke_application_eastus_001" {
       cidr = "10.10.2.128/28"
     }
     isolated = {
-      name = "snet-isolated-001"
-      cidr = "10.10.2.144/28"
+      name               = "snet-isolated-001"
+      cidr               = "10.10.2.144/28"
       create_nsg         = true
       create_route_table = true
+    }
   }
-
   diagnostic_settings = {
     to_log_analytics = {
       name                  = "diag-setting"
