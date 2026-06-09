@@ -24,6 +24,7 @@ Provisions a spoke Virtual Network in Azure with a workload subnet, optional Net
 | hub_resource_group_name | string | — | Yes | Name of the hub resource group. Used in the hub-to-spoke peering resource (requires azurerm.hub provider). |
 | instance | string | "001" | No | Zero-padded 3-digit instance identifier passed to the naming module. Defaults to '001'. |
 | subnet_bastion_cidr | string | null | No | CIDR block for AzureBastionSubnet. When set, the bastion subnet is added to the VNet without an NSG or route table. |
+| additional_subnets | `map(object({ name = string, cidr = string }))` | `{}` | No | Additional subnets to create inside the spoke VNet. Key = internal Terraform ref (e.g. `"database"`). `name` = Azure subnet name following project convention (`snet-{purpose}-{region}-{instance}`). `cidr` must fall within `address_space`. No NSG or route table is attached. |
 | hub_firewall_private_ip | string | null | No | Private IP address of the hub Azure Firewall. When set, a default route (0.0.0.0/0 → VirtualAppliance) is added to the spoke route table to force-tunnel traffic through the firewall. |
 | create_workload_nsg | bool | true | No | When false, no NSG is created or attached to the workload subnet. |
 | diagnostic_settings | map(object) | {} | No | Diagnostic settings passed to NSG and VNet. Map keys must be statically known strings — do not use computed values as keys. Example key: "to_log_analytics". |
@@ -39,6 +40,7 @@ Provisions a spoke Virtual Network in Azure with a workload subnet, optional Net
 | resource_group_name | The name of the resource group that contains all spoke VNet resources. |
 | resource_group_id | The resource ID of the resource group that contains all spoke VNet resources. |
 | nsg_resource_id | The resource ID of the Network Security Group attached to the workload subnet. Null when create_workload_nsg = false. |
+| additional_subnet_ids | Map of resource IDs for additional subnets, keyed by the same keys as `var.additional_subnets`. Empty map when no additional subnets are defined. |
 
 ## Resources Created
 
@@ -124,6 +126,41 @@ module "spoke_vnet_with_bastion" {
       workspace_resource_id = azurerm_log_analytics_workspace.hub.id
     }
   }
+}
+```
+
+### Example 4: Spoke VNet with an additional database subnet
+
+```hcl
+module "vnet_spoke_application_eastus_001" {
+  source = "../../modules/spoke-vnet"
+
+  purpose              = "application"
+  region               = "eastus"
+  instance             = "001"
+  address_space        = ["10.20.0.0/24"]
+  subnet_workload_cidr = "10.20.0.0/25"
+
+  additional_subnets = {
+    database = {
+      name = "snet-database-eus-001"
+      cidr = "10.20.0.128/26"
+    }
+  }
+
+  hub_vnet_resource_id    = module.vnet_hub_eastus_001.vnet_resource_id
+  hub_vnet_name           = module.vnet_hub_eastus_001.vnet_name
+  hub_resource_group_name = module.vnet_hub_eastus_001.resource_group_name
+
+  providers = {
+    azurerm     = azurerm.subscription_application
+    azurerm.hub = azurerm.subscription_hub
+  }
+}
+
+# Access additional subnet IDs
+output "db_subnet_id" {
+  value = module.vnet_spoke_application_eastus_001.additional_subnet_ids["database"]
 }
 ```
 

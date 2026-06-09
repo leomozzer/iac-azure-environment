@@ -89,7 +89,11 @@ module "vnet" {
         name             = local.bastion_subnet_name
         address_prefixes = [var.subnet_bastion_cidr]
       }
-    } : {}
+    } : {},
+    { for k, v in var.additional_subnets : k => {
+      name             = v.name
+      address_prefixes = [v.cidr]
+    } }
   )
 
   diagnostic_settings = var.diagnostic_settings

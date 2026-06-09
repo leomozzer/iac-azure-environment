@@ -47,6 +47,13 @@ module "vnet_spoke_application_eastus_001" {
   hub_vnet_name           = module.vnet_hub_eastus_001.vnet_name
   hub_resource_group_name = module.vnet_hub_eastus_001.resource_group_name
 
+  additional_subnets = {
+    database = {
+      name = "snet-database-001"
+      cidr = "10.10.2.128/27"
+    }
+  }
+
   diagnostic_settings = {
     to_log_analytics = {
       name                  = "diag-setting"

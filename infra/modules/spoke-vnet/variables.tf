@@ -65,6 +65,15 @@ variable "create_workload_nsg" {
   description = "When false, no NSG is created or attached to the workload subnet."
 }
 
+variable "additional_subnets" {
+  type = map(object({
+    name = string
+    cidr = string
+  }))
+  default     = {}
+  description = "Additional subnets to create inside the spoke VNet. Map key is an internal Terraform reference (e.g. \"database\"). name is the Azure subnet name (follow project naming convention: snet-{purpose}-{region}-{instance}). cidr must fall within address_space. No NSG or route table is attached."
+}
+
 variable "diagnostic_settings" {
   type = map(object({
     name                                     = optional(string, null)

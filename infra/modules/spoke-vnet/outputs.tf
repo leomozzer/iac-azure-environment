@@ -32,3 +32,8 @@ output "nsg_resource_id" {
   description = "The resource ID of the Network Security Group attached to the workload subnet. Null when create_workload_nsg = false."
   value       = var.create_workload_nsg ? module.nsg[0].resource_id : null
 }
+
+output "additional_subnet_ids" {
+  description = "Map of resource IDs for additional subnets, keyed by the same keys as var.additional_subnets. Empty map when no additional subnets are defined."
+  value       = { for k in keys(var.additional_subnets) : k => module.vnet.subnets[k].resource_id }
+}
