@@ -28,6 +28,7 @@ module "vnet_hub_eastus_001" {
 
   diagnostic_settings = {
     to_log_analytics = {
+      name                  = "diag-setting"
       workspace_resource_id = module.log_analytics_monitoring_eastus.workspace_resource_id
     }
   }
