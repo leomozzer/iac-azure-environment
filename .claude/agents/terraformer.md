@@ -3,7 +3,7 @@ name: terraformer
 description: Use for writing or editing Terraform files — azurerm resources, AVM modules, variable definitions, outputs, backend config, and provider configuration for this Azure IaC project.
 model: sonnet
 effort: medium
-color: teal
+color: blue
 skills:
   - security-review
 ---
