@@ -52,9 +52,11 @@ module "vnet_spoke_application_eastus_001" {
       name = "snet-database-001"
       cidr = "10.10.2.128/28"
     }
-    storage = {
-      name = "snet-storage-001"
+    isolated = {
+      name = "snet-isolated-001"
       cidr = "10.10.2.144/28"
+      create_nsg         = true
+      create_route_table = true
   }
 
   diagnostic_settings = {
