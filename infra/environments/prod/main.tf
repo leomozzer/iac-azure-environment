@@ -25,6 +25,7 @@ module "vnet_hub_eastus_001" {
   address_space        = ["10.10.0.0/23"]
   subnet_workload_cidr = "10.10.0.0/24"
   subnet_bastion_cidr  = "10.10.1.64/26"
+  subnet_firewall_cidr = "10.10.1.0/26"
 
   egress_type         = "firewall"
   firewall_policy_sku = "Standard"
