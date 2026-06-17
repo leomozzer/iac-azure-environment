@@ -25,32 +25,34 @@ module "vnet_hub_eastus_001" {
   address_space        = ["10.10.0.0/23"]
   subnet_workload_cidr = "10.10.0.0/24"
   subnet_bastion_cidr  = "10.10.1.64/26"
-  subnet_firewall_cidr = "10.10.1.0/26"
 
-  egress_type         = "firewall"
-  firewall_policy_sku = "Standard"
+  # Adding Firewall
+  # subnet_firewall_cidr = "10.10.1.0/26"
 
-  firewall_policy_rule_collection_groups = {
-    base_rules = {
-      priority = 100
-      network_rule_collections = [
-        {
-          name     = "allow-dns"
-          priority = 100
-          action   = "Allow"
-          rules = [
-            {
-              name                  = "dns-google"
-              protocols             = ["UDP"]
-              source_addresses      = ["10.10.1.0/25"]
-              destination_addresses = ["8.8.8.8", "8.8.4.4"]
-              destination_ports     = ["53"]
-            }
-          ]
-        }
-      ]
-    }
-  }
+  # egress_type         = "firewall"
+  # firewall_policy_sku = "Standard"
+
+  # firewall_policy_rule_collection_groups = {
+  #   base_rules = {
+  #     priority = 100
+  #     network_rule_collections = [
+  #       {
+  #         name     = "allow-dns"
+  #         priority = 100
+  #         action   = "Allow"
+  #         rules = [
+  #           {
+  #             name                  = "dns-google"
+  #             protocols             = ["UDP"]
+  #             source_addresses      = ["10.10.1.0/25"]
+  #             destination_addresses = ["8.8.8.8", "8.8.4.4"]
+  #             destination_ports     = ["53"]
+  #           }
+  #         ]
+  #       }
+  #     ]
+  #   }
+  # }
 
   diagnostic_settings = {
     to_log_analytics = {
