@@ -62,11 +62,11 @@ module "vnet_hub_eastus_001" {
               destination_ports     = ["123"]
             },
             {
-              name                  = "allow-kms"
-              protocols             = ["TCP"]
-              source_addresses      = ["10.10.5.0/26"]
-              destination_fqdns     = ["kms.core.windows.net", "azkms.core.windows.net"]
-              destination_ports     = ["1688"]
+              name              = "allow-kms"
+              protocols         = ["TCP"]
+              source_addresses  = ["10.10.5.0/26"]
+              destination_fqdns = ["kms.core.windows.net", "azkms.core.windows.net"]
+              destination_ports = ["1688"]
             },
           ]
         },
@@ -95,17 +95,17 @@ module "vnet_hub_eastus_001" {
               ]
             },
             {
-              name                  = "avd-internet-https"
-              source_addresses      = ["10.10.5.0/26"]
-              destination_fqdns     = ["*"]
+              name              = "avd-internet-https"
+              source_addresses  = ["10.10.5.0/26"]
+              destination_fqdns = ["*"]
               protocols = [
                 { port = 443, type = "Https" },
               ]
             },
             {
-              name                  = "avd-internet-http"
-              source_addresses      = ["10.10.5.0/26"]
-              destination_fqdns     = ["*"]
+              name              = "avd-internet-http"
+              source_addresses  = ["10.10.5.0/26"]
+              destination_fqdns = ["*"]
               protocols = [
                 { port = 80, type = "Http" },
               ]
