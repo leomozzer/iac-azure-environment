@@ -148,12 +148,12 @@ module "vnet_spoke_application_eastus_001" {
   additional_subnets = {
     database = {
       name = "snet-database-eus-001"
-      cidr = "10.10.2.128/27"
+      cidr = "10.20.0.128/27"
       # defaults: shared spoke RT and NSG attached
     }
     isolated = {
       name               = "snet-isolated-eus-001"
-      cidr               = "10.10.2.160/27"
+      cidr               = "10.20.0.160/27"
       create_nsg         = true   # dedicated NSG: nsg-isolated-eus-001
       create_route_table = true   # dedicated RT:  rt-isolated-eus-001
     }
