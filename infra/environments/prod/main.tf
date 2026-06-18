@@ -29,99 +29,99 @@ module "vnet_hub_eastus_001" {
   # Firewall Settings #
   # To use it, uncomment the this section
 
-  subnet_firewall_cidr = "10.10.1.0/26"
+  # subnet_firewall_cidr = "10.10.1.0/26"
 
-  egress_type = "firewall"
-  spoke_address_spaces = {
-    "snet-application-eus-001" = "10.10.2.0/24"
-    "snet-avd-eus-001"         = "10.10.5.0/25"
-  }
-  firewall_policy_sku = "Standard"
+  # egress_type = "firewall"
+  # spoke_address_spaces = {
+  #   "snet-application-eus-001" = "10.10.2.0/24"
+  #   "snet-avd-eus-001"         = "10.10.5.0/25"
+  # }
+  # firewall_policy_sku = "Standard"
 
-  firewall_policy_rule_collection_groups = {
-    base_rules = {
-      priority = 100
-      network_rule_collection = [
-        {
-          name     = "allow-infrastructure"
-          priority = 100
-          action   = "Allow"
-          rule = [
-            {
-              name                  = "allow-dns-azure"
-              protocols             = ["UDP"]
-              source_addresses      = ["10.10.5.0/26"]
-              destination_addresses = ["168.63.129.16"]
-              destination_ports     = ["53"]
-            },
-            {
-              name                  = "allow-dns-public"
-              protocols             = ["UDP"]
-              source_addresses      = ["10.10.5.0/26"]
-              destination_addresses = ["8.8.8.8", "8.8.4.4"]
-              destination_ports     = ["53"]
-            },
-            {
-              name                  = "allow-ntp"
-              protocols             = ["UDP"]
-              source_addresses      = ["10.10.5.0/26"]
-              destination_addresses = ["*"]
-              destination_ports     = ["123"]
-            },
-            {
-              name              = "allow-kms"
-              protocols         = ["TCP"]
-              source_addresses  = ["10.10.5.0/26"]
-              destination_fqdns = ["kms.core.windows.net", "azkms.core.windows.net"]
-              destination_ports = ["1688"]
-            },
-          ]
-        },
-      ]
-      application_rule_collection = [
-        {
-          name     = "allow-avd-required"
-          priority = 200
-          action   = "Allow"
-          rule = [
-            {
-              name                  = "avd-control-plane"
-              source_addresses      = ["10.10.5.0/26"]
-              destination_fqdn_tags = ["WindowsVirtualDesktop"]
-              protocols = [
-                { port = 443, type = "Https" },
-              ]
-            },
-            {
-              name                  = "windows-update"
-              source_addresses      = ["10.10.5.0/26"]
-              destination_fqdn_tags = ["WindowsUpdate"]
-              protocols = [
-                { port = 443, type = "Https" },
-                { port = 80, type = "Http" },
-              ]
-            },
-            {
-              name              = "avd-internet-https"
-              source_addresses  = ["10.10.5.0/26"]
-              destination_fqdns = ["*"]
-              protocols = [
-                { port = 443, type = "Https" },
-              ]
-            },
-            {
-              name              = "avd-internet-http"
-              source_addresses  = ["10.10.5.0/26"]
-              destination_fqdns = ["*"]
-              protocols = [
-                { port = 80, type = "Http" },
-              ]
-            },
-          ]
-        },
-      ]
-    }
-  }
+  # firewall_policy_rule_collection_groups = {
+  #   base_rules = {
+  #     priority = 100
+  #     network_rule_collection = [
+  #       {
+  #         name     = "allow-infrastructure"
+  #         priority = 100
+  #         action   = "Allow"
+  #         rule = [
+  #           {
+  #             name                  = "allow-dns-azure"
+  #             protocols             = ["UDP"]
+  #             source_addresses      = ["10.10.5.0/26"]
+  #             destination_addresses = ["168.63.129.16"]
+  #             destination_ports     = ["53"]
+  #           },
+  #           {
+  #             name                  = "allow-dns-public"
+  #             protocols             = ["UDP"]
+  #             source_addresses      = ["10.10.5.0/26"]
+  #             destination_addresses = ["8.8.8.8", "8.8.4.4"]
+  #             destination_ports     = ["53"]
+  #           },
+  #           {
+  #             name                  = "allow-ntp"
+  #             protocols             = ["UDP"]
+  #             source_addresses      = ["10.10.5.0/26"]
+  #             destination_addresses = ["*"]
+  #             destination_ports     = ["123"]
+  #           },
+  #           {
+  #             name              = "allow-kms"
+  #             protocols         = ["TCP"]
+  #             source_addresses  = ["10.10.5.0/26"]
+  #             destination_fqdns = ["kms.core.windows.net", "azkms.core.windows.net"]
+  #             destination_ports = ["1688"]
+  #           },
+  #         ]
+  #       },
+  #     ]
+  #     application_rule_collection = [
+  #       {
+  #         name     = "allow-avd-required"
+  #         priority = 200
+  #         action   = "Allow"
+  #         rule = [
+  #           {
+  #             name                  = "avd-control-plane"
+  #             source_addresses      = ["10.10.5.0/26"]
+  #             destination_fqdn_tags = ["WindowsVirtualDesktop"]
+  #             protocols = [
+  #               { port = 443, type = "Https" },
+  #             ]
+  #           },
+  #           {
+  #             name                  = "windows-update"
+  #             source_addresses      = ["10.10.5.0/26"]
+  #             destination_fqdn_tags = ["WindowsUpdate"]
+  #             protocols = [
+  #               { port = 443, type = "Https" },
+  #               { port = 80, type = "Http" },
+  #             ]
+  #           },
+  #           {
+  #             name              = "avd-internet-https"
+  #             source_addresses  = ["10.10.5.0/26"]
+  #             destination_fqdns = ["*"]
+  #             protocols = [
+  #               { port = 443, type = "Https" },
+  #             ]
+  #           },
+  #           {
+  #             name              = "avd-internet-http"
+  #             source_addresses  = ["10.10.5.0/26"]
+  #             destination_fqdns = ["*"]
+  #             protocols = [
+  #               { port = 80, type = "Http" },
+  #             ]
+  #           },
+  #         ]
+  #       },
+  #     ]
+  #   }
+  # }
 
   diagnostic_settings = {
     to_log_analytics = {
@@ -144,8 +144,8 @@ module "vnet_spoke_application_eastus_001" {
   hub_vnet_name           = module.vnet_hub_eastus_001.vnet_name
   hub_resource_group_name = module.vnet_hub_eastus_001.resource_group_name
   # Use this to add the firewall private IP to the spoke for routing purposes. Ensure that the firewall has a network rule allowing the necessary traffic from the spoke.
-  hub_firewall_private_ip = module.vnet_hub_eastus_001.firewall_private_ip
-  create_firewall_route   = true
+  # hub_firewall_private_ip = module.vnet_hub_eastus_001.firewall_private_ip
+  # create_firewall_route   = true
 
   additional_subnets = {
     database = {
@@ -185,8 +185,8 @@ module "vnet_spoke_avd_eastus_001" {
   hub_vnet_name           = module.vnet_hub_eastus_001.vnet_name
   hub_resource_group_name = module.vnet_hub_eastus_001.resource_group_name
   # Use this to add the firewall private IP to the spoke for routing purposes. Ensure that the firewall has a network rule allowing the necessary traffic from the spoke.
-  hub_firewall_private_ip = module.vnet_hub_eastus_001.firewall_private_ip
-  create_firewall_route   = true
+  # hub_firewall_private_ip = module.vnet_hub_eastus_001.firewall_private_ip
+  # create_firewall_route   = true
 
   diagnostic_settings = {
     to_log_analytics = {
