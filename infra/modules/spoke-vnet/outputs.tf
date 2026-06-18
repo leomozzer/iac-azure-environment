@@ -47,3 +47,8 @@ output "additional_route_table_ids" {
   description = "Map of dedicated route table resource IDs for additional subnets where create_route_table = true. Keyed by the same keys as var.additional_subnets."
   value       = { for k, v in var.additional_subnets : k => module.additional_route_table[k].resource_id if v.create_route_table }
 }
+
+output "nat_gateway_resource_id" {
+  description = "The resource ID of the NAT Gateway created in the spoke. Null when create_nat_gateway = false."
+  value       = var.create_nat_gateway ? module.nat_gateway[0].resource_id : null
+}

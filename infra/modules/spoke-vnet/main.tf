@@ -93,6 +93,30 @@ module "route_table" {
 }
 
 # ============================================================
+# Block 4b — NAT Gateway (conditional on create_nat_gateway)
+# ============================================================
+
+module "nat_gateway" {
+  count   = var.create_nat_gateway ? 1 : 0
+  source  = "Azure/avm-res-network-natgateway/azurerm"
+  version = "0.3.2"
+
+  name      = module.naming.nat_gateway
+  location  = var.region
+  parent_id = module.resource_group.resource.id
+
+  public_ip_configuration = {
+    pip1 = {
+      name = "pip-ng-${module.naming.virtual_network}"
+    }
+  }
+
+  diagnostic_settings = var.diagnostic_settings
+
+  depends_on = [module.resource_group]
+}
+
+# ============================================================
 # Block 5 — Virtual Network
 # ============================================================
 
@@ -153,6 +177,29 @@ resource "azurerm_route" "default_to_firewall" {
   address_prefix         = "0.0.0.0/0"
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = var.hub_firewall_private_ip
+}
+
+# ============================================================
+# Block 6b — NAT Gateway subnet associations (conditional)
+# ============================================================
+
+resource "azurerm_subnet_nat_gateway_association" "workload" {
+  count          = var.create_nat_gateway ? 1 : 0
+  subnet_id      = module.vnet.subnets["workload"].resource_id
+  nat_gateway_id = module.nat_gateway[0].resource_id
+
+  lifecycle {
+    precondition {
+      condition     = !(var.create_nat_gateway && var.create_firewall_route)
+      error_message = "create_nat_gateway and create_firewall_route are mutually exclusive. A UDR to the hub firewall overrides the NAT gateway for egress."
+    }
+  }
+}
+
+resource "azurerm_subnet_nat_gateway_association" "additional" {
+  for_each       = var.create_nat_gateway ? { for k, v in var.additional_subnets : k => v if v.associate_nat_gateway } : {}
+  subnet_id      = module.vnet.subnets[each.key].resource_id
+  nat_gateway_id = module.nat_gateway[0].resource_id
 }
 
 # ============================================================

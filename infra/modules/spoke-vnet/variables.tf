@@ -65,6 +65,12 @@ variable "create_firewall_route" {
   description = "When true, adds a default route (0.0.0.0/0 → VirtualAppliance) pointing at hub_firewall_private_ip. Must be set explicitly — cannot be inferred from hub_firewall_private_ip at plan time because the firewall IP is a computed value unknown until apply."
 }
 
+variable "create_nat_gateway" {
+  type        = bool
+  default     = false
+  description = "When true, creates a NAT Gateway in the spoke and associates it with the workload subnet and any additional subnets with associate_nat_gateway = true. Mutually exclusive with create_firewall_route — a UDR to the hub firewall overrides NAT gateway egress."
+}
+
 variable "create_workload_nsg" {
   type        = bool
   default     = true
@@ -73,10 +79,11 @@ variable "create_workload_nsg" {
 
 variable "additional_subnets" {
   type = map(object({
-    name               = string
-    cidr               = string
-    create_nsg         = optional(bool, false)
-    create_route_table = optional(bool, false)
+    name                  = string
+    cidr                  = string
+    create_nsg            = optional(bool, false)
+    create_route_table    = optional(bool, false)
+    associate_nat_gateway = optional(bool, false)
   }))
   default     = {}
   description = "Additional subnets to create inside the spoke VNet. Map key is an internal Terraform reference (e.g. \"database\"). name is the Azure subnet name (follow project naming convention: snet-{purpose}-{region}-{instance}). cidr must fall within address_space. By default the shared spoke route table and workload NSG are attached. Set create_nsg = true to auto-create a dedicated NSG (named by replacing snet- with nsg- in the subnet name). Set create_route_table = true to auto-create a dedicated route table (named by replacing snet- with rt- in the subnet name)."
