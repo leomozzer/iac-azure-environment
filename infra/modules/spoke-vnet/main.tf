@@ -121,7 +121,7 @@ module "nat_gateway" {
     }
   }
 
-  diagnostic_settings = var.diagnostic_settings
+  #diagnostic_settings = var.diagnostic_settings
 
   depends_on = [module.resource_group]
 }
