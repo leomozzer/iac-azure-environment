@@ -235,7 +235,7 @@ module "vnet_spoke_application_westeurope_001" {
   hub_vnet_name           = module.vnet_hub_westeurope_001.vnet_name
   hub_resource_group_name = module.vnet_hub_westeurope_001.resource_group_name
 
-  creeate_nat_gateway = true
+  create_nat_gateway = true
 
   additional_subnets = {
     sap = {
