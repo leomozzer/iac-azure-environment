@@ -106,13 +106,13 @@ module "nat_gateway" {
   location  = var.region
   parent_id = module.resource_group.resource.id
 
-  public_ip_configuration = {
+  public_ips = {
     pip1 = {
       name = "pip-ng-${module.naming.virtual_network}"
     }
   }
 
-  #diagnostic_settings = var.diagnostic_settings
+  diagnostic_settings = var.diagnostic_settings
 
   depends_on = [module.resource_group]
 }
