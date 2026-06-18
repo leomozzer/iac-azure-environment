@@ -54,7 +54,7 @@ module "route_table" {
 
   name                = module.naming.route_table
   location            = var.region
-  resource_group_name = module.resource_group.resource.name
+  resource_group_name = local.resource_group_name
 
   depends_on = [module.resource_group]
 }
@@ -169,9 +169,9 @@ module "rule_collection_groups" {
   source   = "Azure/avm-res-network-firewallpolicy/azurerm//modules/rule_collection_groups"
   version  = "0.3.4"
 
-  firewall_policy_rule_collection_group_firewall_policy_id = module.firewall_policy[0].resource_id
-  firewall_policy_rule_collection_group_name               = each.key
-  firewall_policy_rule_collection_group_priority           = each.value.priority
+  firewall_policy_rule_collection_group_firewall_policy_id          = module.firewall_policy[0].resource_id
+  firewall_policy_rule_collection_group_name                        = each.key
+  firewall_policy_rule_collection_group_priority                    = each.value.priority
   firewall_policy_rule_collection_group_network_rule_collection     = each.value.network_rule_collection
   firewall_policy_rule_collection_group_application_rule_collection = each.value.application_rule_collection
   firewall_policy_rule_collection_group_nat_rule_collection         = each.value.nat_rule_collection

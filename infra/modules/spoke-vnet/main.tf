@@ -21,7 +21,7 @@ module "resource_group" {
   source  = "Azure/avm-res-resources-resourcegroup/azurerm"
   version = "0.2.1"
 
-  name     = module.naming.resource_group
+  name     = local.resource_group_name
   location = var.region
 }
 
@@ -129,7 +129,7 @@ module "vnet" {
       address_prefixes = [v.cidr]
       network_security_group = v.create_nsg ? {
         id = module.additional_nsg[k].resource_id
-      } : var.create_workload_nsg ? {
+        } : var.create_workload_nsg ? {
         id = module.nsg[0].resource_id
       } : null
       route_table = {
