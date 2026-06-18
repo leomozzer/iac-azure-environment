@@ -31,12 +31,12 @@ module "vnet_hub_eastus_001" {
 
   subnet_firewall_cidr = "10.10.1.0/26"
 
-  egress_type          = "firewall"
+  egress_type = "firewall"
   spoke_address_spaces = {
     "snet-application-eus-001" = "10.10.2.0/24"
     "snet-avd-eus-001"         = "10.10.5.0/25"
   }
-  firewall_policy_sku  = "Standard"
+  firewall_policy_sku = "Standard"
 
   firewall_policy_rule_collection_groups = {
     base_rules = {
