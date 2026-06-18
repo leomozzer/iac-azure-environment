@@ -190,9 +190,18 @@ module "nat_gateway" {
   location  = var.region
   parent_id = module.resource_group.resource.id
 
+  sku_name = "Standard"
+
   public_ips = {
     pip1 = {
       name = "pip-ng-${module.naming.virtual_network}"
+    }
+  }
+
+  public_ip_configuration = {
+    pip1 = {
+      sku   = "Standard"
+      zones = []
     }
   }
 
