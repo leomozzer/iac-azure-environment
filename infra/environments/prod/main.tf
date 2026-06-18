@@ -239,31 +239,31 @@ module "vnet_spoke_application_westeurope_001" {
 
   # When using NAT Gateway and NSG to reach internet
 
-  create_nat_gateway = true
-  nsg_security_rules = {
-    allow_https_out = {
-      name                       = "Allow-HTTPS-Outbound"
-      priority                   = 100
-      direction                  = "Outbound"
-      access                     = "Allow"
-      protocol                   = "Tcp"
-      source_port_range          = "*"
-      destination_port_range     = "443"
-      source_address_prefix      = "VirtualNetwork"
-      destination_address_prefix = "Internet"
-    }
-    deny_internet_out = {
-      name                       = "Deny-Internet-Outbound"
-      priority                   = 4000
-      direction                  = "Outbound"
-      access                     = "Deny"
-      protocol                   = "*"
-      source_port_range          = "*"
-      destination_port_range     = "*"
-      source_address_prefix      = "*"
-      destination_address_prefix = "Internet"
-    }
-  }
+  # create_nat_gateway = true
+  # nsg_security_rules = {
+  #   allow_https_out = {
+  #     name                       = "Allow-HTTPS-Outbound"
+  #     priority                   = 100
+  #     direction                  = "Outbound"
+  #     access                     = "Allow"
+  #     protocol                   = "Tcp"
+  #     source_port_range          = "*"
+  #     destination_port_range     = "443"
+  #     source_address_prefix      = "VirtualNetwork"
+  #     destination_address_prefix = "Internet"
+  #   }
+  #   deny_internet_out = {
+  #     name                       = "Deny-Internet-Outbound"
+  #     priority                   = 4000
+  #     direction                  = "Outbound"
+  #     access                     = "Deny"
+  #     protocol                   = "*"
+  #     source_port_range          = "*"
+  #     destination_port_range     = "*"
+  #     source_address_prefix      = "*"
+  #     destination_address_prefix = "Internet"
+  #   }
+  # }
 
   additional_subnets = {
     sap = {
