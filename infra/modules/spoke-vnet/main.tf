@@ -38,6 +38,7 @@ module "nsg" {
   location            = var.region
   resource_group_name = module.resource_group.resource.name
 
+  security_rules      = var.nsg_security_rules
   diagnostic_settings = var.diagnostic_settings
 
   depends_on = [module.resource_group]

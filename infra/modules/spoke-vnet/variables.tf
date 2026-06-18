@@ -77,6 +77,29 @@ variable "create_workload_nsg" {
   description = "When false, no NSG is created or attached to the workload subnet."
 }
 
+variable "nsg_security_rules" {
+  type = map(object({
+    access                                     = string
+    direction                                  = string
+    name                                       = string
+    priority                                   = number
+    protocol                                   = string
+    description                                = optional(string)
+    destination_address_prefix                 = optional(string)
+    destination_address_prefixes               = optional(set(string))
+    destination_application_security_group_ids = optional(set(string))
+    destination_port_range                     = optional(string)
+    destination_port_ranges                    = optional(set(string))
+    source_address_prefix                      = optional(string)
+    source_address_prefixes                    = optional(set(string))
+    source_application_security_group_ids      = optional(set(string))
+    source_port_range                          = optional(string)
+    source_port_ranges                         = optional(set(string))
+  }))
+  default     = {}
+  description = "Security rules applied to the workload NSG. Map key is a Terraform-internal identifier. When create_nat_gateway = true and no rules are provided, Azure's default AllowInternetOutBound rule permits all outbound traffic — define explicit allow rules and a deny-internet catch-all to restrict egress."
+}
+
 variable "additional_subnets" {
   type = map(object({
     name                  = string
