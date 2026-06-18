@@ -25,12 +25,12 @@ Provisions an Azure Log Analytics Workspace and resource group using AVM modules
 
 ## Outputs
 
-| Name | Description | Sensitive |
-|------|-------------|-----------|
-| workspace_resource_id | The resource ID of the Log Analytics Workspace. | No |
-| workspace_name | The name of the Log Analytics Workspace. | Yes |
-| resource_group_name | The name of the resource group containing the Log Analytics Workspace. | No |
-| resource_group_id | The resource ID of the resource group containing the Log Analytics Workspace. | No |
+| Name | Description |
+|------|-------------|
+| workspace_resource_id | The resource ID of the Log Analytics Workspace. |
+| workspace_name | The name of the Log Analytics Workspace (sensitive). |
+| resource_group_name | The name of the resource group containing the Log Analytics Workspace. |
+| resource_group_id | The resource ID of the resource group containing the Log Analytics Workspace. |
 
 ## Usage
 

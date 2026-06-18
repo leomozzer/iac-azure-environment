@@ -24,10 +24,13 @@ Provisions a spoke Virtual Network in Azure with a workload subnet, optional Net
 | hub_resource_group_name | string | — | Yes | Name of the hub resource group. Used in the hub-to-spoke peering resource (requires azurerm.hub provider). |
 | instance | string | "001" | No | Zero-padded 3-digit instance identifier passed to the naming module. Defaults to '001'. |
 | subnet_bastion_cidr | string | null | No | CIDR block for AzureBastionSubnet. When set, the bastion subnet is added to the VNet without an NSG or route table. |
-| additional_subnets | `map(object({ name = string, cidr = string, create_nsg = optional(bool, false), create_route_table = optional(bool, false) }))` | `{}` | No | Additional subnets. Key = internal Terraform ref. `name` = Azure subnet name (`snet-{purpose}-{region}-{instance}`). `cidr` must fall within `address_space`. By default the shared spoke route table and workload NSG are attached. Set `create_nsg = true` to auto-create a dedicated NSG (name derived by replacing `snet-` with `nsg-`). Set `create_route_table = true` to auto-create a dedicated route table (name derived by replacing `snet-` with `rt-`). |
 | hub_firewall_private_ip | string | null | No | Private IP address of the hub Azure Firewall. When set, a default route (0.0.0.0/0 → VirtualAppliance) is added to the spoke route table to force-tunnel traffic through the firewall. |
+| create_firewall_route | bool | false | No | When true, adds a default route (0.0.0.0/0 → VirtualAppliance) pointing at hub_firewall_private_ip. Must be set explicitly since the firewall IP is a computed value unknown until apply. |
+| create_nat_gateway | bool | false | No | When true, creates a NAT Gateway in the spoke and associates it with the workload subnet and any additional subnets with associate_nat_gateway = true. Mutually exclusive with create_firewall_route. |
 | create_workload_nsg | bool | true | No | When false, no NSG is created or attached to the workload subnet. |
-| diagnostic_settings | map(object) | {} | No | Diagnostic settings passed to NSG and VNet. Map keys must be statically known strings — do not use computed values as keys. Example key: "to_log_analytics". |
+| nsg_security_rules | map(object) | {} | No | Security rules applied to the workload NSG. Map key is a Terraform-internal identifier. When create_nat_gateway = true and no rules are provided, Azure's default AllowInternetOutBound rule permits all outbound traffic. |
+| additional_subnets | `map(object({ name = string, cidr = string, create_nsg = optional(bool, false), create_route_table = optional(bool, false), associate_nat_gateway = optional(bool, false) }))` | `{}` | No | Additional subnets. Key = internal Terraform ref. `name` = Azure subnet name. `cidr` must fall within `address_space`. By default the shared spoke route table and workload NSG are attached. Set `create_nsg = true` to auto-create a dedicated NSG. Set `create_route_table = true` to auto-create a dedicated route table. |
+| diagnostic_settings | map(object) | {} | No | Diagnostic settings passed to NSG and VNet. Map keys must be statically known strings. Example key: "to_log_analytics". |
 
 ## Outputs
 
@@ -42,7 +45,8 @@ Provisions a spoke Virtual Network in Azure with a workload subnet, optional Net
 | nsg_resource_id | The resource ID of the Network Security Group attached to the workload subnet. Null when create_workload_nsg = false. |
 | additional_subnet_ids | Map of resource IDs for additional subnets, keyed by the same keys as `var.additional_subnets`. Empty map when no additional subnets are defined. |
 | additional_nsg_ids | Map of NSG resource IDs for additional subnets where `create_nsg = true`. Keyed by the same keys as `var.additional_subnets`. |
-| additional_route_table_ids | Map of dedicated route table resource IDs for additional subnets where `create_route_table = true`. |
+| additional_route_table_ids | Map of dedicated route table resource IDs for additional subnets where `create_route_table = true`. Keyed by the same keys as `var.additional_subnets`. |
+| nat_gateway_resource_id | The resource ID of the NAT Gateway created in the spoke. Null when create_nat_gateway = false. |
 
 ## Resources Created
 

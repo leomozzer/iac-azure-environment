@@ -18,14 +18,17 @@ Provisions a hub Virtual Network in Azure with a workload subnet, Network Securi
 | purpose | string | — | Yes | Workload descriptor passed to the naming module. Must be lowercase and hyphen-separated (e.g. 'hub', 'networking'). |
 | region | string | — | Yes | Azure region for all resources and passed to the naming module (e.g. 'eastus', 'westeurope'). |
 | address_space | list(string) | — | Yes | One or more CIDR ranges for the hub Virtual Network (e.g. ["10.10.0.0/23"]). |
-| subnet_workload_cidr | string | — | Yes | CIDR block for the workload subnet. An NSG and route table are attached to this subnet. |
+| subnet_workload_cidr | string | — | Yes | CIDR block for the workload subnet. A route table is always attached; an NSG is attached only when create_workload_nsg = true. |
 | instance | string | "001" | No | Zero-padded 3-digit instance identifier passed to the naming module. |
 | subnet_firewall_cidr | string | null | No | CIDR block for AzureFirewallSubnet. Required when egress_type = "firewall". |
 | subnet_bastion_cidr | string | null | No | CIDR block for AzureBastionSubnet. When set, the bastion subnet is added to the VNet without an NSG or route table. |
 | egress_type | string | "none" | No | Egress strategy for workloads. Allowed values: 'none', 'firewall', 'nat_gateway'. |
+| spoke_address_spaces | map(string) | {} | No | Map of spoke VNet address spaces to route through the firewall from the hub workload subnet. Key is a human-readable name, value is the CIDR. Only used when egress_type = "firewall". |
 | firewall_policy_sku | string | "Standard" | No | SKU tier for Azure Firewall Policy. Allowed values: 'Standard', 'Premium'. Only used when egress_type = "firewall". |
-| firewall_policy_rule_collection_groups | map(object) | {} | No | Map of firewall policy rule collection groups. Only used when egress_type = "firewall". |
-| log_analytics_workspace_id | string | null | No | Resource ID of a Log Analytics Workspace. When set, diagnostic settings are configured on all applicable resources. |
+| firewall_policy_rule_collection_groups | map(object) | {} | No | Map of firewall policy rule collection groups. Keys are group names. Only used when egress_type = "firewall". |
+| log_analytics_workspace_id | string | null | No | Resource ID of a Log Analytics Workspace. When set, diagnostic settings are configured on all resources that support them (VNet, NSG, Azure Firewall, Firewall Policy). |
+| diagnostic_settings | map(object) | {} | No | Diagnostic settings passed to all resources (NSG, VNet, Firewall, NAT Gateway). Map keys must be statically known strings. Example key: "to_log_analytics". |
+| create_workload_nsg | bool | true | No | When false, no NSG is created or attached to the workload subnet. Safe to set false when egress_type = "firewall". |
 
 ## Outputs
 
