@@ -1,0 +1,171 @@
+name: "Terraform Destroy"
+
+on:
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: "Stage to destroy"
+        required: true
+        default: prod
+        type: choice
+        options: [dev, test, prod]
+      confirm:
+        description: "Type 'destroy' to confirm"
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  RESOURCE_GROUP_NAME: rg-tfstate-eus-001
+  STORAGE_ACCOUNT_NAME: sttfstateiaceus001
+  ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+  ARM_USE_OIDC: "true"
+
+jobs:
+  gate:
+    name: "Confirm Destroy"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate confirmation
+        run: |
+          if [ "${{ inputs.confirm }}" != "destroy" ]; then
+            echo "::error::Confirmation must be exactly 'destroy'. Got: '${{ inputs.confirm }}'"
+            exit 1
+          fi
+
+  plan_destroy:
+    name: "Plan Destroy (${{ inputs.stage }})"
+    needs: gate
+    runs-on: ubuntu-latest
+    concurrency:
+      group: destroy-${{ inputs.stage }}
+      cancel-in-progress: false
+    outputs:
+      plan-text: ${{ steps.show-plan.outputs.plan_text }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.15.5"
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        working-directory: ./infra/environments/${{ inputs.stage }}
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=${{ env.RESOURCE_GROUP_NAME }}" \
+            -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" \
+            -backend-config="container_name=tfstate" \
+            -backend-config="key=${{ inputs.stage }}.tfstate" \
+            -reconfigure
+
+      - name: Download tfvars from Azure Blob
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            az storage blob download \
+              --account-name "${{ env.STORAGE_ACCOUNT_NAME }}" \
+              --container-name "tfvars" \
+              --name "${{ inputs.stage }}.tfvars" \
+              --file "./infra/environments/${{ inputs.stage }}/${{ inputs.stage }}.tfvars" \
+              --auth-mode login \
+              --no-progress || true
+
+      - name: Terraform Plan Destroy
+        id: plan
+        working-directory: ./infra/environments/${{ inputs.stage }}
+        run: |
+          VAR_FILE_FLAG=""
+          if [ -f "${{ inputs.stage }}.tfvars" ]; then
+            VAR_FILE_FLAG="-var-file=${{ inputs.stage }}.tfvars"
+          fi
+          terraform plan -destroy -out="${{ inputs.stage }}.destroy.tfplan" -lock-timeout=10m $VAR_FILE_FLAG
+
+      - name: Capture Plan Text
+        id: show-plan
+        working-directory: ./infra/environments/${{ inputs.stage }}
+        run: |
+          PLAN_TEXT=$(terraform show -no-color "${{ inputs.stage }}.destroy.tfplan")
+          echo "plan_text<<EOF_PLAN" >> $GITHUB_OUTPUT
+          echo "$PLAN_TEXT" >> $GITHUB_OUTPUT
+          echo "EOF_PLAN" >> $GITHUB_OUTPUT
+
+      - name: Archive working directory with destroy plan
+        uses: a7ul/tar-action@v1.1.3
+        with:
+          command: c
+          cwd: ./infra/environments/${{ inputs.stage }}
+          files: ./
+          outPath: destroy-${{ inputs.stage }}-${{ github.run_number }}.tar.gz
+
+      - name: Upload destroy plan archive to Azure Blob
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            az storage blob upload \
+              --account-name "${{ env.STORAGE_ACCOUNT_NAME }}" \
+              --container-name "plans" \
+              --file "destroy-${{ inputs.stage }}-${{ github.run_number }}.tar.gz" \
+              --name "destroy-${{ inputs.stage }}-${{ github.run_number }}.tar.gz" \
+              --auth-mode login \
+              --overwrite
+
+  destroy:
+    name: "Destroy (${{ inputs.stage }})"
+    needs: plan_destroy
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.stage }}
+    concurrency:
+      group: destroy-${{ inputs.stage }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.15.5"
+          terraform_wrapper: false
+
+      - name: Download destroy plan archive from Azure Blob
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            az storage blob download \
+              --account-name "${{ env.STORAGE_ACCOUNT_NAME }}" \
+              --container-name "plans" \
+              --name "destroy-${{ inputs.stage }}-${{ github.run_number }}.tar.gz" \
+              --file "./infra/environments/${{ inputs.stage }}/destroy-${{ inputs.stage }}-${{ github.run_number }}.tar.gz" \
+              --auth-mode login
+
+      - name: Extract destroy plan archive
+        uses: a7ul/tar-action@v1.1.3
+        with:
+          command: x
+          cwd: ./infra/environments/${{ inputs.stage }}
+          files: destroy-${{ inputs.stage }}-${{ github.run_number }}.tar.gz
+
+      - name: Terraform Destroy
+        working-directory: ./infra/environments/${{ inputs.stage }}
+        run: terraform apply -lock-timeout=10m "${{ inputs.stage }}.destroy.tfplan"

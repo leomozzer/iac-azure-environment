@@ -12,10 +12,10 @@ Overall VNet space: **10.10.0.0/16**
 | Hub workload subnet | snet-hub-eus-001 | 10.10.0.0/24 | Subnet |
 | Hub firewall subnet | AzureFirewallSubnet | 10.10.1.0/26 | Subnet |
 | Hub bastion subnet | AzureBastionSubnet | 10.10.1.64/26 | Subnet |
-| Application Spoke VNet | vnet-application-spoke-eus-001 | 10.10.2.0/24 | Virtual Network |
-| Application workload subnet | snet-application-spoke-eus-001 | 10.10.2.0/24 | Subnet |
-| AVD Spoke VNet | vnet-avd-spoke-eus-001 | 10.10.5.0/25 | Virtual Network |
-| AVD workload subnet | snet-avd-spoke-eus-001 | 10.10.5.0/25 | Subnet |
+| Application VNet | vnet-application-eus-001 | 10.10.2.0/24 | Virtual Network |
+| Application workload subnet | snet-application-eus-001 | 10.10.2.0/25 | Subnet |
+| AVD VNet | vnet-avd-eus-001 | 10.10.5.0/25 | Virtual Network |
+| AVD workload subnet | snet-avd-eus-001 | 10.10.5.0/26 | Subnet |
 
 ### Available ranges within 10.10.0.0/16
 
@@ -23,6 +23,7 @@ Overall VNet space: **10.10.0.0/16**
 |---|---|---|
 | 10.10.3.0/24 | 10.10.3.0 – 10.10.3.255 | Available |
 | 10.10.4.0/24 | 10.10.4.0 – 10.10.4.255 | Available |
+| 10.10.5.128/25 | 10.10.5.128 – 10.10.5.255 | Available |
 | 10.10.6.0/23 | 10.10.6.0 – 10.10.7.255 | Available |
 | 10.10.8.0/21 | 10.10.8.0 – 10.10.15.255 | Available |
 | 10.10.16.0/20 | 10.10.16.0 – 10.10.31.255 | Available |
@@ -36,16 +37,17 @@ Overall VNet space: **136.0.0.0/16**
 
 | Resource | Terraform Name | CIDR | Type |
 |---|---|---|---|
-| Hub VNet | vnet-hub-weu-001 | 136.0.0.0/16 | Virtual Network |
-| Hub workload subnet | snet-hub-weu-001 | 136.0.0.0/23 | Subnet |
-| Hub firewall subnet | AzureFirewallSubnet | 136.0.2.0/26 | Subnet |
+| Hub VNet | vnet-hub-weu-001 | 136.0.0.0/23 | Virtual Network |
+| Hub workload subnet | snet-hub-weu-001 | 136.0.0.0/24 | Subnet |
+| Application VNet | vnet-application-weu-001 | 136.0.2.128/25 | Virtual Network |
+| Application workload subnet | snet-application-weu-001 | 136.0.2.128/25 | Subnet |
 
 ### Available ranges within 136.0.0.0/16
 
 | CIDR | Usable Range | Notes |
 |---|---|---|
-| 136.0.2.64/26 | 136.0.2.64 – 136.0.2.127 | Available (after firewall /26) |
-| 136.0.2.128/25 | 136.0.2.128 – 136.0.2.255 | Available |
+| 136.0.2.0/26 | 136.0.2.0 – 136.0.2.63 | Available |
+| 136.0.2.64/26 | 136.0.2.64 – 136.0.2.127 | Available |
 | 136.0.3.0/24 | 136.0.3.0 – 136.0.3.255 | Available |
 | 136.0.4.0/22 | 136.0.4.0 – 136.0.7.255 | Available |
 | 136.0.8.0/21 | 136.0.8.0 – 136.0.15.255 | Available |
