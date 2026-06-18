@@ -116,9 +116,8 @@ module "nat_gateway" {
 
   public_ip_configuration = {
     pip1 = {
-      sku                     = "StandardV2"
-      zones                   = [1, 2, 3]
-      idle_timeout_in_minutes = 15
+      sku   = "StandardV2"
+      zones = [1, 2, 3]
     }
   }
 
