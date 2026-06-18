@@ -22,7 +22,7 @@ module "resource_group" {
   source  = "Azure/avm-res-resources-resourcegroup/azurerm"
   version = "0.2.1"
 
-  name     = module.naming.resource_group
+  name     = local.resource_group_name
   location = var.region
 }
 
