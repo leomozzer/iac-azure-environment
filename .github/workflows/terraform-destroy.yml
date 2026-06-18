@@ -156,7 +156,7 @@ jobs:
               --account-name "${{ env.STORAGE_ACCOUNT_NAME }}" \
               --container-name "plans" \
               --name "destroy-${{ inputs.stage }}-${{ github.run_number }}.tar.gz" \
-              --file "destroy-${{ inputs.stage }}-${{ github.run_number }}.tar.gz" \
+              --file "./infra/environments/${{ inputs.stage }}/destroy-${{ inputs.stage }}-${{ github.run_number }}.tar.gz" \
               --auth-mode login
 
       - name: Extract destroy plan archive

@@ -53,7 +53,7 @@ module "additional_nsg" {
   source   = "Azure/avm-res-network-networksecuritygroup/azurerm"
   version  = "0.5.1"
 
-  name                = replace(each.value.name, "/^snet-/", "nsg-")
+  name                = regexreplace(each.value.name, "^snet-", "nsg-")
   location            = var.region
   resource_group_name = module.resource_group.resource.name
 
@@ -71,7 +71,7 @@ module "additional_route_table" {
   source   = "Azure/avm-res-network-routetable/azurerm"
   version  = "0.5.0"
 
-  name                = replace(each.value.name, "/^snet-/", "rt-")
+  name                = regexreplace(each.value.name, "^snet-", "rt-")
   location            = var.region
   resource_group_name = module.resource_group.resource.name
 
