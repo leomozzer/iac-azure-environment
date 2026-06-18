@@ -110,7 +110,7 @@ module "nat_gateway" {
 
   public_ips = {
     pip1 = {
-      name = "pip-ng-${module.naming.virtual_network}"
+      name = "pip-${module.naming.nat_gateway}"
     }
   }
 
