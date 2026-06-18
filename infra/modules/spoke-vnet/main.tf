@@ -116,8 +116,8 @@ module "nat_gateway" {
 
   public_ip_configuration = {
     pip1 = {
-      sku   = "StandardV2"
-      zones = [1, 2, 3]
+      sku   = "Standard"
+      zones = []
     }
   }
 
