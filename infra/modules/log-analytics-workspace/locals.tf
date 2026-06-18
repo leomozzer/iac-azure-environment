@@ -1,3 +1,3 @@
 locals {
-  resource_group_name = "rg-${module.log_analytics_workspace}"
+  resource_group_name = "rg-${module.naming.log_analytics_workspace}"
 }
