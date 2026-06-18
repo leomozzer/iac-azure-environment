@@ -169,6 +169,7 @@ module "vnet_spoke_application_eastus_001" {
   providers = {
     azurerm     = azurerm.subscription_application
     azurerm.hub = azurerm.subscription_hub
+    azapi       = azapi.subscription_application
   }
 }
 
@@ -198,6 +199,7 @@ module "vnet_spoke_avd_eastus_001" {
   providers = {
     azurerm     = azurerm.subscription_application
     azurerm.hub = azurerm.subscription_hub
+    azapi       = azapi.subscription_application
   }
 }
 
@@ -281,5 +283,6 @@ module "vnet_spoke_application_westeurope_001" {
   providers = {
     azurerm     = azurerm.subscription_application
     azurerm.hub = azurerm.subscription_hub
+    azapi       = azapi.subscription_application
   }
 }
