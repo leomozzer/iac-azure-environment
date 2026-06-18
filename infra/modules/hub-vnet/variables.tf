@@ -55,6 +55,12 @@ variable "egress_type" {
   }
 }
 
+variable "spoke_address_spaces" {
+  type        = map(string)
+  default     = {}
+  description = "Map of spoke VNet address spaces to route through the firewall from the hub workload subnet. Key is a human-readable name used in the route name (e.g. \"snet-avd-eus-001\"), value is the CIDR (e.g. \"10.10.5.0/25\"). Only used when egress_type = \"firewall\". Prevents asymmetric routing when spoke route tables have a 0.0.0.0/0 → Firewall default route."
+}
+
 variable "firewall_policy_sku" {
   type        = string
   default     = "Standard"

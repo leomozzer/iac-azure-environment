@@ -218,3 +218,18 @@ resource "azurerm_route" "default_to_firewall" {
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = module.firewall_hub[0].resource.ip_configuration[0].private_ip_address
 }
+
+# ============================================================
+# Block 9 — Per-spoke routes on hub route table (symmetric routing)
+# ============================================================
+
+resource "azurerm_route" "spoke_to_firewall" {
+  for_each = var.egress_type == "firewall" ? var.spoke_address_spaces : {}
+
+  name                   = "${each.key}-to-firewall"
+  resource_group_name    = module.resource_group.resource.name
+  route_table_name       = module.route_table.resource.name
+  address_prefix         = each.value
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = module.firewall_hub[0].resource.ip_configuration[0].private_ip_address
+}
