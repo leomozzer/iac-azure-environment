@@ -141,6 +141,7 @@ module "vnet_spoke_application_eastus_001" {
   hub_resource_group_name = module.vnet_hub_eastus_001.resource_group_name
   # Use this to add the firewall private IP to the spoke for routing purposes. Ensure that the firewall has a network rule allowing the necessary traffic from the spoke.
   hub_firewall_private_ip = module.vnet_hub_eastus_001.firewall_private_ip
+  create_firewall_route   = true
 
   additional_subnets = {
     database = {
@@ -181,6 +182,7 @@ module "vnet_spoke_avd_eastus_001" {
   hub_resource_group_name = module.vnet_hub_eastus_001.resource_group_name
   # Use this to add the firewall private IP to the spoke for routing purposes. Ensure that the firewall has a network rule allowing the necessary traffic from the spoke.
   hub_firewall_private_ip = module.vnet_hub_eastus_001.firewall_private_ip
+  create_firewall_route   = true
 
   diagnostic_settings = {
     to_log_analytics = {

@@ -146,7 +146,7 @@ module "vnet" {
 # ============================================================
 
 resource "azurerm_route" "default_to_firewall" {
-  count                  = var.hub_firewall_private_ip != null ? 1 : 0
+  count                  = var.create_firewall_route ? 1 : 0
   name                   = "default-to-firewall"
   resource_group_name    = module.resource_group.resource.name
   route_table_name       = module.route_table.resource.name

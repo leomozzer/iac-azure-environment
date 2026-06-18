@@ -59,6 +59,12 @@ variable "hub_firewall_private_ip" {
   description = "Private IP address of the hub Azure Firewall. When set, a default route (0.0.0.0/0 → VirtualAppliance) is added to the spoke route table to force-tunnel traffic through the firewall."
 }
 
+variable "create_firewall_route" {
+  type        = bool
+  default     = false
+  description = "When true, adds a default route (0.0.0.0/0 → VirtualAppliance) pointing at hub_firewall_private_ip. Must be set explicitly — cannot be inferred from hub_firewall_private_ip at plan time because the firewall IP is a computed value unknown until apply."
+}
+
 variable "create_workload_nsg" {
   type        = bool
   default     = true
