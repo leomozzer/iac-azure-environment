@@ -17,5 +17,5 @@ module "log_analytics_monitoring_westeurope" {
 module "amba_eastus" {
   source                     = "../../modules/amba"
   region                     = "eastus"
-  root_management_group_name = "Landing-Zone"
+  root_management_group_name = "7147592f-487e-44bf-b6e6-bbea6c888e35"
 }
