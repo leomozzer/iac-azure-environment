@@ -12,4 +12,9 @@ module "avm_ptn_monitoring_amba_alz" {
   location                   = var.region
   root_management_group_name = var.root_management_group_name
   resource_group_name        = module.naming.resource_group
+
+  timeouts = {
+    create = "30m"
+    update = "30m"
+  }
 }
