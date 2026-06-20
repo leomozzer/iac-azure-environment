@@ -14,6 +14,10 @@ terraform {
       source  = "azure/modtm"
       version = "~> 0.3"
     }
+    alz = {
+      source  = "Azure/alz"
+      version = "~> 0.17"
+    }
   }
 }
 
@@ -54,4 +58,11 @@ provider "azurerm" {
 provider "azapi" {
   alias           = "subscription_avd"
   subscription_id = var.avd_subscription_id
+}
+
+provider "alz" {
+  library_references = [{
+    path = "platform/amba"
+    ref  = "2025.07.0"
+  }]
 }
