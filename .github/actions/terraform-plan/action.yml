@@ -105,15 +105,15 @@ runs:
         fi
         terraform plan -out="${{ inputs.stage }}.tfplan" -lock-timeout=10m $VAR_FILE_FLAG
 
-    - name: Capture Plan Text
-      id: show-plan
-      shell: bash
-      working-directory: ${{ inputs.working-dir }}
-      run: |
-        PLAN_TEXT=$(terraform show -no-color "${{ inputs.stage }}.tfplan")
-        echo "plan_text<<EOF_PLAN" >> $GITHUB_OUTPUT
-        echo "$PLAN_TEXT" >> $GITHUB_OUTPUT
-        echo "EOF_PLAN" >> $GITHUB_OUTPUT
+    # - name: Capture Plan Text
+    #   id: show-plan
+    #   shell: bash
+    #   working-directory: ${{ inputs.working-dir }}
+    #   run: |
+    #     PLAN_TEXT=$(terraform show -no-color "${{ inputs.stage }}.tfplan")
+    #     echo "plan_text<<EOF_PLAN" >> $GITHUB_OUTPUT
+    #     echo "$PLAN_TEXT" >> $GITHUB_OUTPUT
+    #     echo "EOF_PLAN" >> $GITHUB_OUTPUT
 
     - name: Archive working directory with plan
       uses: a7ul/tar-action@v1.1.3
