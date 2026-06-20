@@ -111,6 +111,12 @@ runs:
       working-directory: ${{ inputs.working-dir }}
       run: |
         PLAN_TEXT=$(terraform show -no-color "${{ inputs.stage }}.tfplan")
+        MAX_CHARS=60000
+        if [ ${#PLAN_TEXT} -gt $MAX_CHARS ]; then
+          PLAN_TEXT="${PLAN_TEXT:0:$MAX_CHARS}
+
+... (output truncated — full plan uploaded to Azure Blob storage)"
+        fi
         echo "plan_text<<EOF_PLAN" >> $GITHUB_OUTPUT
         echo "$PLAN_TEXT" >> $GITHUB_OUTPUT
         echo "EOF_PLAN" >> $GITHUB_OUTPUT
