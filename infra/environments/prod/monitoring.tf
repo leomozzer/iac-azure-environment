@@ -14,13 +14,8 @@ module "log_analytics_monitoring_westeurope" {
   instance = "001"
 }
 
-module "avm-ptn-monitoring-amba-alz" {
-  source  = "Azure/avm-ptn-monitoring-amba-alz/azurerm"
-  version = "0.3.0"
-
-  location = "eastus"
-
+module "amba_eastus" {
+  source                     = "../../modules/amba"
+  region                     = "eastus"
   root_management_group_name = "Landing-Zone"
-
-  # insert the 2 required variables here
 }

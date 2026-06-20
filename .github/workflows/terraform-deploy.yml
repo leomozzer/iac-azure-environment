@@ -41,9 +41,21 @@ jobs:
         with:
           working-dir: ./infra/environments/${{ inputs.stage || 'prod' }}
 
+  security:
+    name: "Security Scan (${{ inputs.stage || 'prod' }})"
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/terraform-security
+        with:
+          working-dir: ./infra/environments/${{ inputs.stage || 'prod' }}
+          modules-dir: ./infra/modules
+
   plan:
     name: "Plan (${{ inputs.stage || 'prod' }})"
-    needs: validate
+    needs: [validate, security]
     runs-on: ubuntu-latest
     concurrency:
       group: plan-${{ inputs.stage || 'prod' }}
@@ -85,21 +97,9 @@ jobs:
 
             *Run: [`${{ github.run_number }}`](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})*
 
-  security:
-    name: "Security Scan (${{ inputs.stage || 'prod' }})"
-    needs: validate
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/terraform-security
-        with:
-          working-dir: ./infra/environments/${{ inputs.stage || 'prod' }}
-          modules-dir: ./infra/modules
-
   apply:
     name: "Apply (${{ inputs.stage || 'prod' }})"
-    needs: [plan, security]
+    needs: [plan]
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment: ${{ inputs.stage || 'prod' }}
