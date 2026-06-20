@@ -1,6 +1,6 @@
 output "resource_group_name" {
   description = "The name of the resource group containing the AMBA resources."
-  value       = module.avm-res-resources-resourcegroup.resource.name
+  value       = module.naming.resource_group
 }
 
 output "resource_group_id" {
