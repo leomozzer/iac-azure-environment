@@ -272,3 +272,45 @@ module "vnet_spoke_application_westeurope_001" {
     azapi       = azapi.subscription_application
   }
 }
+
+module "resource_groups_eastus_002" {
+  source  = "Azure/avm-res-resources-resourcegroup/azurerm"
+  version = "0.2.0"
+
+  location         = "eastus"
+  name             = "rg-hub-eus-002"
+  enable_telemetry = false
+}
+
+module "hub_and_spoke_networks_eastus_002" {
+  source  = "Azure/avm-ptn-alz-connectivity-hub-and-spoke-vnet/azurerm"
+  version = "0.17.2"
+
+  enable_telemetry = false
+
+  hub_and_spoke_networks_settings = {
+    enabled_resources = {
+      ddos_protection_plan = false
+    }
+  }
+
+  hub_virtual_networks = {
+    primary = {
+      enabled_resources = {
+        bastion                               = false
+        virtual_network_gateway_express_route = false
+        virtual_network_gateway_vpn           = false
+        private_dns_resolver                  = false
+      }
+      location                  = "eastus"
+      default_hub_address_space = "10.20.0.0/16"
+      default_parent_id         = module.resource_groups_eastus_002.resource_id
+      firewall = {
+        sku_tier = "Basic"
+      }
+      firewall_policy = {
+        sku = "Basic"
+      }
+    }
+  }
+}
