@@ -211,7 +211,7 @@ resource "azurerm_route" "default_to_firewall" {
 # ============================================================
 
 resource "azurerm_virtual_network_peering" "spoke_to_hub" {
-  name                      = "peer-${module.naming.virtual_network}-to-hub"
+  name                      = "peer-${module.naming.virtual_network}-to-${var.hub_vnet_name}"
   resource_group_name       = module.resource_group.resource.name
   virtual_network_name      = module.vnet.name
   remote_virtual_network_id = var.hub_vnet_resource_id
@@ -224,7 +224,7 @@ resource "azurerm_virtual_network_peering" "spoke_to_hub" {
 resource "azurerm_virtual_network_peering" "hub_to_spoke" {
   provider = azurerm.hub
 
-  name                      = "peer-hub-to-${module.naming.virtual_network}"
+  name                      = "peer-${var.hub_vnet_name}-to-${module.naming.virtual_network}"
   resource_group_name       = var.hub_resource_group_name
   virtual_network_name      = var.hub_vnet_name
   remote_virtual_network_id = module.vnet.resource_id
