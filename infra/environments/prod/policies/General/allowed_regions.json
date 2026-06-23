@@ -1,0 +1,42 @@
+{
+    "properties": {
+        "displayName": "Allow resources only in specific regions",
+        "policyType": "Custom",
+        "mode": "Indexed",
+        "description": "Restricts the locations where resources can be deployed.",
+        "metadata": {
+            "category": "General",
+            "version": "1.0.0"
+        },
+        "parameters": {
+            "listOfRegionsAllowed": {
+                "type": "Array",
+                "metadata": {
+                    "displayName": "Allowed locations",
+                    "description": "The list of locations that can be specified when deploying resources.",
+                    "strongType": "location"
+                }
+            },
+            "effect": {
+                "type": "String",
+                "metadata": {
+                    "displayName": "Effect",
+                    "description": "Enable or disable the execution of the policy"
+                },
+                "allowedValues": ["Audit", "Deny", "Disabled"],
+                "defaultValue": "Deny"
+            }
+        },
+        "policyRule": {
+            "if": {
+                "not": {
+                    "field": "location",
+                    "in": "[parameters('listOfRegionsAllowed')]"
+                }
+            },
+            "then": {
+                "effect": "[parameters('effect')]"
+            }
+        }
+    }
+}
