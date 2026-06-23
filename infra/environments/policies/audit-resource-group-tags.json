@@ -1,0 +1,46 @@
+{
+    "properties": {
+        "displayName": "Audit required resource group tags",
+        "policyType": "Custom",
+        "mode": "All",
+        "description": "Check if the tags Environment, UseCase, Deployed, MaintainedBy exists in all the resources groups",
+        "metadata": {
+            "version": "1.0.0",
+            "category": "Tags"
+        },
+        "parameters": {},
+        "policyRule": {
+            "if": {
+                "allOf": [
+                    {
+                        "field": "type",
+                        "equals": "Microsoft.Resources/subscriptions/resourceGroups"
+                    },
+                    {
+                        "anyOf": [
+                            {
+                                "field": "tags[Environment]",
+                                "exists": "false"
+                            },
+                            {
+                                "field": "tags[UseCase]",
+                                "exists": "false"
+                            },
+                            {
+                                "field": "tags[Deployed]",
+                                "exists": "false"
+                            },
+                            {
+                                "field": "tags[MaintainedBy]",
+                                "exists": "false"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "then": {
+                "effect": "audit"
+            }
+        }
+    }
+}
