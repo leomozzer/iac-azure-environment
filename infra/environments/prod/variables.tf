@@ -36,3 +36,8 @@ variable "enable_firewall" {
   description = "Deploy Azure Firewall Standard in the hub. Set false to keep VNets only (no firewall cost)."
   default     = false
 }
+
+variable "root_management_group_name" {
+  type        = string
+  description = "Root management group name for the Azure landing zone"
+}

@@ -1,5 +1,5 @@
 data "azurerm_management_group" "root" {
-  name = "7147592f-487e-44bf-b6e6-bbea6c888e35"
+  name = var.root_management_group_name
 }
 
 module "allowed_regions" {
